@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -6,37 +7,86 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Trash2, ListChecks, Briefcase, User, HeartPulse, ShoppingCart } from "lucide-react";
-import type { Task } from '@/types/dayflow';
+import { PlusCircle, Trash2, ListChecks, Briefcase, User, HeartPulse, ShoppingCart, Sparkles } from "lucide-react";
+import type { Task, TaskCategory } from '@/types/dayflow';
 import { useToast } from "@/hooks/use-toast";
 
-type TaskCategory = 'Work' | 'Personal' | 'Health/Fitness' | 'Errands';
 const CATEGORIES: { name: TaskCategory, icon: React.ElementType }[] = [
   { name: 'Work', icon: Briefcase },
   { name: 'Personal', icon: User },
   { name: 'Health/Fitness', icon: HeartPulse },
-  { name: 'Errands', icon: ShoppingCart }
+  { name: 'Errands', icon: ShoppingCart },
+  { name: 'AI Suggested', icon: Sparkles }
 ];
 
-export function ToDoListCard() {
-  const [tasks, setTasks] = useState<Record<TaskCategory, Task[]>>({
-    Work: [], Personal: [], 'Health/Fitness': [], Errands: []
+const initialTaskState = (): Record<TaskCategory, Task[]> => {
+  const state: Record<TaskCategory, Task[]> = {
+    Work: [], Personal: [], 'Health/Fitness': [], Errands: [], 'AI Suggested': []
+  };
+  // Ensure all defined categories are present
+  CATEGORIES.forEach(cat => {
+    if (!state[cat.name]) {
+      state[cat.name] = [];
+    }
   });
+  return state;
+};
+
+
+export function ToDoListCard() {
+  const [tasks, setTasks] = useState<Record<TaskCategory, Task[]>>(initialTaskState());
   const [newTaskInputs, setNewTaskInputs] = useState<Record<TaskCategory, string>>({
-    Work: '', Personal: '', 'Health/Fitness': '', Errands: ''
+    Work: '', Personal: '', 'Health/Fitness': '', Errands: '', 'AI Suggested': ''
   });
   const { toast } = useToast();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const loadTasks = () => {
+    const storedTasks = localStorage.getItem('dayflow-todolist-tasks');
+    let newTasksState = initialTaskState();
+    if (storedTasks) {
+        try {
+            const parsedTasks = JSON.parse(storedTasks);
+            // Merge stored tasks with initial state to ensure all categories are covered
+            for (const category in newTasksState) {
+                if (parsedTasks[category]) {
+                    newTasksState[category as TaskCategory] = parsedTasks[category];
+                }
+            }
+        } catch (error) {
+            console.error("Error parsing tasks from localStorage", error);
+            // Fallback to initial empty state if parsing fails
+        }
+    }
+    setTasks(newTasksState);
+  };
+
 
   useEffect(() => {
-    const storedTasks = localStorage.getItem('dayflow-todolist-tasks');
-    if (storedTasks) {
-      setTasks(JSON.parse(storedTasks));
-    }
+    loadTasks(); // Initial load
+
+    const handleDataChange = () => {
+      setRefreshKey(prev => prev + 1);
+    };
+    window.addEventListener('dayflow-datachanged', handleDataChange);
+    return () => {
+      window.removeEventListener('dayflow-datachanged', handleDataChange);
+    };
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('dayflow-todolist-tasks', JSON.stringify(tasks));
-  }, [tasks]);
+    if (refreshKey > 0) { // Avoid re-load on initial mount if already loaded
+        loadTasks();
+    }
+  }, [refreshKey]);
+
+
+  useEffect(() => {
+    // Avoid saving empty initial state immediately if it was just loaded
+    if (Object.values(tasks).some(taskList => taskList.length > 0) || refreshKey > 0) {
+         localStorage.setItem('dayflow-todolist-tasks', JSON.stringify(tasks));
+    }
+  }, [tasks, refreshKey]);
 
   const addTask = (category: TaskCategory) => {
     const text = newTaskInputs[category].trim();
@@ -44,7 +94,7 @@ export function ToDoListCard() {
     const newTask: Task = { id: Date.now().toString(), text, completed: false, category };
     setTasks(prevTasks => ({
       ...prevTasks,
-      [category]: [...prevTasks[category], newTask]
+      [category]: [...(prevTasks[category] || []), newTask]
     }));
     setNewTaskInputs(prevInputs => ({ ...prevInputs, [category]: '' }));
     toast({ title: "Task Added", description: `"${text}" added to ${category}.`});
@@ -82,7 +132,7 @@ export function ToDoListCard() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="Work" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-4">
             {CATEGORIES.map(cat => (
               <TabsTrigger key={cat.name} value={cat.name} className="text-xs sm:text-sm">
                 <cat.icon className="h-4 w-4 mr-1 sm:mr-2" />{cat.name}
@@ -103,7 +153,7 @@ export function ToDoListCard() {
                     <PlusCircle />
                   </Button>
                 </div>
-                {tasks[cat.name].length > 0 ? (
+                {(tasks[cat.name] && tasks[cat.name].length > 0) ? (
                   <ul className="space-y-2 max-h-60 overflow-y-auto pr-2">
                     {tasks[cat.name].map(task => (
                       <li key={task.id} className="flex items-center gap-2 p-2 bg-card rounded-md hover:bg-secondary/30 transition-colors">

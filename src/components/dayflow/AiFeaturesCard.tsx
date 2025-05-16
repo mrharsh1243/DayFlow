@@ -1,9 +1,10 @@
+
 "use client";
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, CalendarPlus } from "lucide-react";
+import { Sparkles, CalendarPlus, PlusCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { suggestTasks, SuggestTasksInput } from '@/ai/flows/suggest-tasks';
 import { scheduleLockedTime, ScheduleLockedTimeInput } from '@/ai/flows/schedule-locked-time';
+import type { Task, TaskCategory as DayFlowTaskCategory } from '@/types/dayflow';
+import { TIME_SLOTS } from '@/types/dayflow';
 
 export function AiFeaturesCard() {
   const { toast } = useToast();
@@ -59,6 +62,86 @@ export function AiFeaturesCard() {
     }
   };
 
+  const handleAddTaskToToDo = (taskText: string) => {
+    try {
+      const storedTasks = localStorage.getItem('dayflow-todolist-tasks');
+      const tasksByCategory: Record<DayFlowTaskCategory, Task[]> = storedTasks ? JSON.parse(storedTasks) : {
+        Work: [], Personal: [], 'Health/Fitness': [], Errands: [], 'AI Suggested': []
+      };
+      
+      const aiCategory: DayFlowTaskCategory = 'AI Suggested';
+      if (!tasksByCategory[aiCategory]) {
+        tasksByCategory[aiCategory] = [];
+      }
+
+      const newTask: Task = {
+        id: Date.now().toString(),
+        text: taskText,
+        completed: false,
+        category: aiCategory,
+      };
+      tasksByCategory[aiCategory].push(newTask);
+      localStorage.setItem('dayflow-todolist-tasks', JSON.stringify(tasksByCategory));
+      window.dispatchEvent(new CustomEvent('dayflow-datachanged'));
+      toast({ title: "Task Added to To-Do", description: `"${taskText}" added to ${aiCategory}.` });
+    } catch (error) {
+      console.error("Error adding task to to-do:", error);
+      toast({ title: "Error", description: "Could not add task to to-do list.", variant: "destructive" });
+    }
+  };
+
+  const getSlotIdFromTime = (timeStr: string): string | null => {
+    if (!timeStr || !timeStr.includes(':')) return TIME_SLOTS[0]?.id || null;
+    const [hours] = timeStr.split(':').map(Number);
+  
+    if (isNaN(hours)) return TIME_SLOTS[0]?.id || null;
+  
+    let bestSlotId: string | null = null;
+    for (let i = TIME_SLOTS.length - 1; i >= 0; i--) {
+        const [slotHour] = TIME_SLOTS[i].isoTime.split(':').map(Number);
+        if (hours >= slotHour) {
+            bestSlotId = TIME_SLOTS[i].id;
+            break;
+        }
+    }
+    return bestSlotId || TIME_SLOTS[0]?.id || null; 
+  };
+
+  const handleAddScheduledTaskToTimeblock = () => {
+    if (!scheduleResult) return;
+    try {
+      const timeSlotId = getSlotIdFromTime(scheduleResult.suggestedStartTime);
+      if (!timeSlotId) {
+        toast({ title: "Error", description: "Could not determine a valid time slot.", variant: "destructive" });
+        return;
+      }
+
+      const storedTimeblockTasks = localStorage.getItem('dayflow-timeblock-tasks');
+      const tasksByTimeSlot: Record<string, Task[]> = storedTimeblockTasks ? JSON.parse(storedTimeblockTasks) : {};
+
+      if (!tasksByTimeSlot[timeSlotId]) {
+        tasksByTimeSlot[timeSlotId] = [];
+      }
+      
+      const newTask: Task = {
+        id: Date.now().toString(),
+        text: taskName, // taskName from the dialog's input state
+        completed: false,
+        timeSlotId: timeSlotId, // Ensure this matches interface if Task needs timeSlotId
+        isLocked: true,
+      };
+
+      tasksByTimeSlot[timeSlotId].push(newTask);
+      localStorage.setItem('dayflow-timeblock-tasks', JSON.stringify(tasksByTimeSlot));
+      window.dispatchEvent(new CustomEvent('dayflow-datachanged'));
+      toast({ title: "Task Scheduled", description: `"${taskName}" added to your time block.` });
+    } catch (error) {
+      console.error("Error adding scheduled task to timeblock:", error);
+      toast({ title: "Error", description: "Could not schedule the task.", variant: "destructive" });
+    }
+  };
+
+
   const handleScheduleLockedTime = async () => {
     setIsLoadingSchedule(true);
     setScheduleResult(null);
@@ -74,7 +157,7 @@ export function AiFeaturesCard() {
       };
       const result = await scheduleLockedTime(input);
       setScheduleResult(result);
-      toast({ title: "Time Slot Scheduled!", description: "AI has suggested a time for your locked task." });
+      toast({ title: "Time Slot Suggested!", description: "AI has suggested a time for your locked task." });
     } catch (error) {
       console.error("Error scheduling time:", error);
       toast({ title: "Error", description: "Could not schedule time. Please try again.", variant: "destructive" });
@@ -126,8 +209,15 @@ export function AiFeaturesCard() {
             {suggestedTasksResult && (
               <div className="mt-4 p-3 bg-secondary/50 rounded-md">
                 <h4 className="font-semibold mb-2">Suggested Tasks:</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm">
-                  {suggestedTasksResult.map((task, index) => <li key={index}>{task}</li>)}
+                <ul className="list-disc list-inside space-y-2 text-sm">
+                  {suggestedTasksResult.map((task, index) => (
+                    <li key={index} className="flex justify-between items-center">
+                      <span>{task}</span>
+                      <Button size="sm" variant="outline" onClick={() => handleAddTaskToToDo(task)}>
+                        <PlusCircle className="mr-2 h-3 w-3" /> Add
+                      </Button>
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
@@ -185,6 +275,9 @@ export function AiFeaturesCard() {
               <div className="mt-4 p-3 bg-secondary/50 rounded-md">
                 <h4 className="font-semibold">Suggested Start Time: {scheduleResult.suggestedStartTime}</h4>
                 <p className="text-sm mt-1"><strong>Justification:</strong> {scheduleResult.justification}</p>
+                <Button className="mt-2 w-full" onClick={handleAddScheduledTaskToTimeblock} disabled={isLoadingSchedule}>
+                  <CalendarPlus className="mr-2 h-4 w-4" /> Add to Schedule
+                </Button>
               </div>
             )}
             <DialogFooter>

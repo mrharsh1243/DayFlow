@@ -1,11 +1,12 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Clock, PlusCircle, Trash2, Lock, Edit3, CheckSquare, XSquare } from "lucide-react";
-import type { Task, TimeSlot as TimeSlotType } from '@/types/dayflow'; // Renamed to avoid conflict
+import { Clock, PlusCircle, Trash2, Lock, Edit3 } from "lucide-react"; // CheckSquare, XSquare removed as they are not used
+import type { Task, TimeSlot as TimeSlotType } from '@/types/dayflow'; 
 import { TIME_SLOTS } from '@/types/dayflow';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -30,17 +31,46 @@ export function TimeBlockingCard() {
   const [editingTask, setEditingTask] = useState<ScheduledTask | null>(null);
   const [editingText, setEditingText] = useState('');
   const { toast } = useToast();
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
+  const loadTasks = () => {
     const storedTasks = localStorage.getItem('dayflow-timeblock-tasks');
     if (storedTasks) {
-      setTasks(JSON.parse(storedTasks));
+      try {
+        setTasks(JSON.parse(storedTasks));
+      } catch (error) {
+        console.error("Error parsing timeblock tasks from localStorage", error);
+        setTasks({}); // Fallback to empty if parsing fails
+      }
+    } else {
+      setTasks({});
     }
+  };
+
+  useEffect(() => {
+    loadTasks(); // Initial load
+
+    const handleDataChange = () => {
+      setRefreshKey(prev => prev + 1);
+    };
+    window.addEventListener('dayflow-datachanged', handleDataChange);
+    return () => {
+      window.removeEventListener('dayflow-datachanged', handleDataChange);
+    };
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('dayflow-timeblock-tasks', JSON.stringify(tasks));
-  }, [tasks]);
+    if (refreshKey > 0) { // Avoid re-load on initial mount if already loaded
+        loadTasks();
+    }
+  }, [refreshKey]);
+
+  useEffect(() => {
+     // Avoid saving empty initial state immediately if it was just loaded
+    if (Object.keys(tasks).length > 0 || refreshKey > 0) {
+        localStorage.setItem('dayflow-timeblock-tasks', JSON.stringify(tasks));
+    }
+  }, [tasks, refreshKey]);
 
   const addTaskToSlot = useCallback((timeSlotId: string, taskText: string, isLocked: boolean = false) => {
     if (!taskText.trim()) return;
@@ -55,7 +85,7 @@ export function TimeBlockingCard() {
       ...prevTasks,
       [timeSlotId]: [...(prevTasks[timeSlotId] || []), newTask]
     }));
-    toast({ title: "Task Added", description: `"${taskText}" added to ${timeSlotId}.` });
+    toast({ title: "Task Added", description: `"${taskText}" added to ${TIME_SLOTS.find(s=>s.id === timeSlotId)?.label}.` });
   }, [toast]);
 
   const removeTaskFromSlot = (timeSlotId: string, taskId: string) => {
@@ -189,18 +219,18 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="task-text" className="text-right">Task</Label>
+                <Label htmlFor={`task-text-${slot.id}`} className="text-right">Task</Label>
                 <Textarea 
-                  id="task-text" 
+                  id={`task-text-${slot.id}`}
                   value={newTaskText} 
                   onChange={(e) => setNewTaskText(e.target.value)} 
                   className="col-span-3"
                   placeholder="Describe the task"
                 />
               </div>
-              <div className="flex items-center space-x-2 ml-auto mr-auto pl-[25%]"> {/* Adjusted for alignment */}
-                <Checkbox id="is-locked" checked={isLockedSlot} onCheckedChange={(checked) => setIsLockedSlot(checked as boolean)} />
-                <Label htmlFor="is-locked">Mark as locked time (e.g., meeting)</Label>
+              <div className="flex items-center space-x-2 ml-auto mr-auto pl-[25%]">
+                <Checkbox id={`is-locked-${slot.id}`} checked={isLockedSlot} onCheckedChange={(checked) => setIsLockedSlot(checked as boolean)} />
+                <Label htmlFor={`is-locked-${slot.id}`}>Mark as locked time (e.g., meeting)</Label>
               </div>
             </div>
             <DialogFooter>
@@ -214,7 +244,7 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
         <ul className="space-y-1 text-sm">
           {tasks.map(task => (
             <li key={task.id} className={`flex items-center gap-2 p-1.5 rounded ${task.isLocked ? 'bg-secondary/50' : ''}`}>
-              <Checkbox id={`task-${task.id}`} checked={task.completed} onCheckedChange={() => onToggleTask(task.id)} disabled={task.isLocked} />
+              <Checkbox id={`task-${slot.id}-${task.id}`} checked={task.completed} onCheckedChange={() => onToggleTask(task.id)} disabled={task.isLocked} />
               <span className={`flex-1 ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
                 {task.isLocked && <Lock className="inline h-3 w-3 mr-1 text-accent" />}
                 {task.text}
