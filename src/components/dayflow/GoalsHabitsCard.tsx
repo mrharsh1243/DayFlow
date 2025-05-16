@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -27,8 +28,17 @@ export function GoalsHabitsCard() {
   useEffect(() => {
     const storedHabits = localStorage.getItem('dayflow-habits');
     if (storedHabits) {
-      setHabits(JSON.parse(storedHabits));
+      // Parse stored habits (which won't have functional icons)
+      const parsedHabits: Omit<Habit, 'icon'>[] = JSON.parse(storedHabits);
+      // Re-map to include the actual icon components
+      setHabits(
+        parsedHabits.map(h => ({
+          ...h,
+          icon: habitIcons[h.name] || Repeat,
+        }))
+      );
     } else {
+      // Initialize with default habits and their icons
       setHabits(DEFAULT_HABITS.map(h => ({...h, icon: habitIcons[h.name] || Repeat })));
     }
 
@@ -39,7 +49,10 @@ export function GoalsHabitsCard() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('dayflow-habits', JSON.stringify(habits));
+    // Store only serializable parts of habits, excluding the icon component itself
+    localStorage.setItem('dayflow-habits', JSON.stringify(
+      habits.map(({ icon, ...rest }) => rest) // Destructure to remove icon before stringifying
+    ));
   }, [habits]);
 
   useEffect(() => {
@@ -82,11 +95,11 @@ export function GoalsHabitsCard() {
           <h3 className="font-semibold text-lg mb-2 flex items-center gap-2"><Repeat className="text-accent" /> Daily Habits</h3>
           <ul className="space-y-2">
             {habits.map(habit => {
-              const Icon = habit.icon || Repeat;
+              const IconComponent = habit.icon || Repeat; // Ensure IconComponent is a valid component
               return (
                 <li key={habit.id} className="flex items-center gap-2 p-2 bg-card rounded-md hover:bg-secondary/30 transition-colors">
                   <Checkbox id={`habit-${habit.id}`} checked={habit.completed} onCheckedChange={() => toggleHabit(habit.id)} />
-                  <Icon className="h-5 w-5 text-muted-foreground" />
+                  <IconComponent className="h-5 w-5 text-muted-foreground" />
                   <label htmlFor={`habit-${habit.id}`} className={`flex-1 text-sm ${habit.completed ? 'line-through text-muted-foreground' : ''}`}>{habit.name}</label>
                 </li>
               );
@@ -124,3 +137,4 @@ export function GoalsHabitsCard() {
     </Card>
   );
 }
+
