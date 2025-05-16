@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Trash2, ListChecks, Briefcase, User, HeartPulse, ShoppingCart, Sparkles } from "lucide-react";
+import { PlusCircle, Trash2, ListChecks, Briefcase, User, HeartPulse, ShoppingCart } from "lucide-react";
 import type { Task, TaskCategory } from '@/types/dayflow';
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,12 +16,11 @@ const CATEGORIES: { name: TaskCategory, icon: React.ElementType }[] = [
   { name: 'Personal', icon: User },
   { name: 'Health/Fitness', icon: HeartPulse },
   { name: 'Errands', icon: ShoppingCart },
-  { name: 'AI Suggested', icon: Sparkles }
 ];
 
 const initialTaskState = (): Record<TaskCategory, Task[]> => {
   const state: Record<TaskCategory, Task[]> = {
-    Work: [], Personal: [], 'Health/Fitness': [], Errands: [], 'AI Suggested': []
+    Work: [], Personal: [], 'Health/Fitness': [], Errands: []
   };
   // Ensure all defined categories are present
   CATEGORIES.forEach(cat => {
@@ -36,7 +35,7 @@ const initialTaskState = (): Record<TaskCategory, Task[]> => {
 export function ToDoListCard() {
   const [tasks, setTasks] = useState<Record<TaskCategory, Task[]>>(initialTaskState());
   const [newTaskInputs, setNewTaskInputs] = useState<Record<TaskCategory, string>>({
-    Work: '', Personal: '', 'Health/Fitness': '', Errands: '', 'AI Suggested': ''
+    Work: '', Personal: '', 'Health/Fitness': '', Errands: ''
   });
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
@@ -132,7 +131,7 @@ export function ToDoListCard() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="Work" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4">
             {CATEGORIES.map(cat => (
               <TabsTrigger key={cat.name} value={cat.name} className="text-xs sm:text-sm">
                 <cat.icon className="h-4 w-4 mr-1 sm:mr-2" />{cat.name}

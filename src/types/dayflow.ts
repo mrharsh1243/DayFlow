@@ -2,7 +2,7 @@ export interface Task {
   id: string;
   text: string;
   completed: boolean;
-  category?: TaskCategory; // Updated to use the TaskCategory type
+  category?: TaskCategory;
   startTime?: string; // e.g., "09:00"
   endTime?: string; // e.g., "10:00"
   isLocked?: boolean; // For manually locked time slots
@@ -35,7 +35,14 @@ export interface ReflectionItem {
 
 export type Mood = 'Happy' | 'Neutral' | 'Productive' | 'Stressed' | 'Tired' | '';
 
-export type TaskCategory = 'Work' | 'Personal' | 'Health/Fitness' | 'Errands' | 'AI Suggested';
+// Removed 'AI Suggested'
+export type TaskCategory = 'Work' | 'Personal' | 'Health/Fitness' | 'Errands';
+
+export interface Priority {
+  id: string;
+  text: string;
+  completed: boolean;
+}
 
 export const DEFAULT_HABITS: Habit[] = [
   { id: 'habit-1', name: 'Drink 8 glasses of water', completed: false },

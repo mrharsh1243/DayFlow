@@ -1,17 +1,13 @@
+
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CalendarDays, ListTodo, MessageSquareQuote, PlusCircle, Trash2 } from "lucide-react";
-
-interface Priority {
-  id: string;
-  text: string;
-  completed: boolean;
-}
+import type { Priority } from '@/types/dayflow'; // Import Priority type
 
 const quotes = [
   "The secret of getting ahead is getting started.",
@@ -27,6 +23,24 @@ export function DailyOverviewCard() {
   const [priorities, setPriorities] = useState<Priority[]>([]);
   const [newPriority, setNewPriority] = useState('');
   const [quote, setQuote] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0); // For triggering re-renders
+
+  const loadPriorities = useCallback(() => {
+    const storedPriorities = localStorage.getItem('dayflow-priorities');
+    if (storedPriorities) {
+      try {
+        const parsedPriorities = JSON.parse(storedPriorities);
+        setPriorities(Array.isArray(parsedPriorities) ? parsedPriorities : []);
+      } catch (e) {
+        console.error("Failed to parse priorities from localStorage", e);
+        // Set a default if parsing fails or it's not an array
+        setPriorities([{ id: 'prio-default', text: 'Define top goal for the day', completed: false }]);
+      }
+    } else {
+      // Initialize with a default if nothing is in localStorage
+      setPriorities([{ id: 'prio-default', text: 'Define top goal for the day', completed: false }]);
+    }
+  }, []); // useCallback to memoize loadPriorities
 
   useEffect(() => {
     const date = new Date();
@@ -34,34 +48,46 @@ export function DailyOverviewCard() {
     setCurrentDay(date.toLocaleDateString(undefined, { weekday: 'long' }));
     setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
     
-    // Load priorities from localStorage or set default
-    const storedPriorities = localStorage.getItem('dayflow-priorities');
-    if (storedPriorities) {
-      setPriorities(JSON.parse(storedPriorities));
-    } else {
-      setPriorities([
-        { id: 'prio1', text: 'Define top goal for the day', completed: false },
-      ]);
-    }
-  }, []);
+    loadPriorities(); // Initial load
+    
+    const handleDataChange = () => {
+      setRefreshKey(prev => prev + 1); // Increment key to trigger reload effect
+    };
+    window.addEventListener('dayflow-datachanged', handleDataChange);
+    return () => {
+      window.removeEventListener('dayflow-datachanged', handleDataChange);
+    };
+  }, [loadPriorities]); // Add loadPriorities to dependency array
 
   useEffect(() => {
-    localStorage.setItem('dayflow-priorities', JSON.stringify(priorities));
-  }, [priorities]);
+    if (refreshKey > 0) { 
+        loadPriorities();
+    }
+  }, [refreshKey, loadPriorities]); // Add loadPriorities here too
+
+  useEffect(() => {
+    // Only save if priorities were explicitly changed by user or AI, not just initial load
+    if (refreshKey > 0 || (priorities.length > 0 && priorities[0].id !== 'prio-default') || priorities.length === 0 && localStorage.getItem('dayflow-priorities') !== null) {
+      localStorage.setItem('dayflow-priorities', JSON.stringify(priorities));
+    }
+  }, [priorities, refreshKey]);
 
   const addPriority = () => {
     if (newPriority.trim() && priorities.length < 3) {
       setPriorities([...priorities, { id: Date.now().toString(), text: newPriority, completed: false }]);
       setNewPriority('');
+      setRefreshKey(prev => prev + 1); // Indicate a change has occurred
     }
   };
 
   const togglePriority = (id: string) => {
     setPriorities(priorities.map(p => p.id === id ? { ...p, completed: !p.completed } : p));
+    setRefreshKey(prev => prev + 1); // Indicate a change has occurred
   };
   
   const removePriority = (id: string) => {
     setPriorities(priorities.filter(p => p.id !== id));
+    setRefreshKey(prev => prev + 1); // Indicate a change has occurred
   };
 
   return (
@@ -100,6 +126,9 @@ export function DailyOverviewCard() {
                 <PlusCircle />
               </Button>
             </div>
+          )}
+           {priorities.length === 0 && (
+            <p className="text-sm text-muted-foreground italic text-center py-2">No priorities set. Add up to 3!</p>
           )}
         </div>
         <div>

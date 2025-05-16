@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { suggestTasks, SuggestTasksInput } from '@/ai/flows/suggest-tasks';
 import { scheduleLockedTime, ScheduleLockedTimeInput } from '@/ai/flows/schedule-locked-time';
-import type { Task, TaskCategory as DayFlowTaskCategory } from '@/types/dayflow';
+import type { Task, Priority } from '@/types/dayflow';
 import { TIME_SLOTS } from '@/types/dayflow';
 
 export function AiFeaturesCard() {
@@ -62,31 +62,27 @@ export function AiFeaturesCard() {
     }
   };
 
-  const handleAddTaskToToDo = (taskText: string) => {
+  const handleAddSuggestedTaskToPriority = (taskText: string) => {
     try {
-      const storedTasks = localStorage.getItem('dayflow-todolist-tasks');
-      const tasksByCategory: Record<DayFlowTaskCategory, Task[]> = storedTasks ? JSON.parse(storedTasks) : {
-        Work: [], Personal: [], 'Health/Fitness': [], Errands: [], 'AI Suggested': []
-      };
+      const storedPriorities = localStorage.getItem('dayflow-priorities');
+      let currentPriorities: Priority[] = storedPriorities ? JSON.parse(storedPriorities) : [];
       
-      const aiCategory: DayFlowTaskCategory = 'AI Suggested';
-      if (!tasksByCategory[aiCategory]) {
-        tasksByCategory[aiCategory] = [];
+      if (currentPriorities.length < 3) {
+        const newPriority: Priority = {
+          id: Date.now().toString(),
+          text: taskText,
+          completed: false,
+        };
+        currentPriorities.push(newPriority);
+        localStorage.setItem('dayflow-priorities', JSON.stringify(currentPriorities));
+        window.dispatchEvent(new CustomEvent('dayflow-datachanged'));
+        toast({ title: "Priority Added", description: `"${taskText}" added to your top priorities.` });
+      } else {
+        toast({ title: "Priorities Full", description: "Max 3 priorities. Remove one to add.", variant: "default" });
       }
-
-      const newTask: Task = {
-        id: Date.now().toString(),
-        text: taskText,
-        completed: false,
-        category: aiCategory,
-      };
-      tasksByCategory[aiCategory].push(newTask);
-      localStorage.setItem('dayflow-todolist-tasks', JSON.stringify(tasksByCategory));
-      window.dispatchEvent(new CustomEvent('dayflow-datachanged'));
-      toast({ title: "Task Added to To-Do", description: `"${taskText}" added to ${aiCategory}.` });
     } catch (error) {
-      console.error("Error adding task to to-do:", error);
-      toast({ title: "Error", description: "Could not add task to to-do list.", variant: "destructive" });
+      console.error("Error adding task to priorities:", error);
+      toast({ title: "Error", description: "Could not add task to priorities.", variant: "destructive" });
     }
   };
 
@@ -127,7 +123,7 @@ export function AiFeaturesCard() {
         id: Date.now().toString(),
         text: taskName, // taskName from the dialog's input state
         completed: false,
-        timeSlotId: timeSlotId, // Ensure this matches interface if Task needs timeSlotId
+        // timeSlotId: timeSlotId, // This property is implicit via the key in tasksByTimeSlot
         isLocked: true,
       };
 
@@ -186,7 +182,7 @@ export function AiFeaturesCard() {
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Intelligent Task Suggestion</DialogTitle>
-              <DialogDescription>Provide context for the AI to suggest relevant tasks.</DialogDescription>
+              <DialogDescription>Provide context for the AI to suggest relevant tasks for your Top Priorities.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
               <div className="grid grid-cols-4 items-center gap-4">
@@ -198,7 +194,7 @@ export function AiFeaturesCard() {
                 <Textarea id="currentSchedule" value={currentSchedule} onChange={(e) => setCurrentSchedule(e.target.value)} className="col-span-3" placeholder="e.g., 10 AM Meeting, 1 PM Lunch" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="priorities" className="text-right">Top Priorities</Label>
+                <Label htmlFor="priorities" className="text-right">Top Priorities Context</Label>
                 <Textarea id="priorities" value={priorities} onChange={(e) => setPriorities(e.target.value)} className="col-span-3" placeholder="e.g., Finish report, Call John" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -208,13 +204,13 @@ export function AiFeaturesCard() {
             </div>
             {suggestedTasksResult && (
               <div className="mt-4 p-3 bg-secondary/50 rounded-md">
-                <h4 className="font-semibold mb-2">Suggested Tasks:</h4>
+                <h4 className="font-semibold mb-2">Suggested Tasks for Priorities:</h4>
                 <ul className="list-disc list-inside space-y-2 text-sm">
                   {suggestedTasksResult.map((task, index) => (
                     <li key={index} className="flex justify-between items-center">
                       <span>{task}</span>
-                      <Button size="sm" variant="outline" onClick={() => handleAddTaskToToDo(task)}>
-                        <PlusCircle className="mr-2 h-3 w-3" /> Add
+                      <Button size="sm" variant="outline" onClick={() => handleAddSuggestedTaskToPriority(task)}>
+                        <PlusCircle className="mr-2 h-3 w-3" /> Add to Priorities
                       </Button>
                     </li>
                   ))}
