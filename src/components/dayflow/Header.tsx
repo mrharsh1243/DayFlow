@@ -1,22 +1,28 @@
 
 "use client";
 
-import { LayoutGrid, Moon, Sun } from 'lucide-react';
+import { LayoutGrid, Moon, Sun, Palette, Gem, Crown, Tv } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useEffect, useState } from 'react';
 
 export function Header() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
     setMounted(true);
   }, []);
 
   if (!mounted) {
-    // Render a placeholder or null until mounted to avoid hydration mismatch
     return (
       <header className="bg-primary/10 backdrop-blur-md sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
@@ -30,6 +36,13 @@ export function Header() {
     );
   }
 
+  let TriggerIcon = Palette;
+  if (resolvedTheme === 'light') TriggerIcon = Sun;
+  else if (resolvedTheme === 'dark') TriggerIcon = Moon;
+  else if (resolvedTheme === 'premium') TriggerIcon = Gem;
+  else if (resolvedTheme === 'royal') TriggerIcon = Crown;
+
+
   return (
     <header className="bg-primary/10 backdrop-blur-md sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
@@ -37,18 +50,38 @@ export function Header() {
           <LayoutGrid className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold text-primary">DayFlow</h1>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? (
-            <Sun className="h-6 w-6 text-foreground" />
-          ) : (
-            <Moon className="h-6 w-6 text-foreground" />
-          )}
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label="Change theme">
+              <TriggerIcon className="h-6 w-6 text-foreground" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Select Theme</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setTheme('light')}>
+              <Sun className="mr-2 h-4 w-4" />
+              <span>Light</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme('dark')}>
+              <Moon className="mr-2 h-4 w-4" />
+              <span>Dark</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme('premium')}>
+              <Gem className="mr-2 h-4 w-4" />
+              <span>Premium</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme('royal')}>
+              <Crown className="mr-2 h-4 w-4" />
+              <span>Royal</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setTheme('system')}>
+              <Tv className="mr-2 h-4 w-4" />
+              <span>System</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
