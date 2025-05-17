@@ -1,3 +1,4 @@
+
 import { Header } from "@/components/dayflow/Header";
 import { DailyOverviewCard } from "@/components/dayflow/DailyOverviewCard";
 import { TimeBlockingCard } from "@/components/dayflow/TimeBlockingCard";
@@ -7,6 +8,7 @@ import { MealPlannerCard } from "@/components/dayflow/MealPlannerCard";
 import { NotesIdeasCard } from "@/components/dayflow/NotesIdeasCard";
 import { ReflectionReviewCard } from "@/components/dayflow/ReflectionReviewCard";
 import { AiFeaturesCard } from "@/components/dayflow/AiFeaturesCard";
+import { PomodoroTimerCard } from "@/components/dayflow/PomodoroTimerCard";
 
 export default function DayFlowPage() {
   return (
@@ -42,11 +44,14 @@ export default function DayFlowPage() {
             <MealPlannerCard />
           </div>
           <div className="lg:col-span-1 xl:col-span-2">
-            <NotesIdeasCard />
+            <PomodoroTimerCard />
           </div>
 
           {/* Row 5 */}
-          <div className="md:col-span-2 lg:col-span-3 xl:col-span-4">
+          <div className="lg:col-span-1 xl:col-span-2">
+            <NotesIdeasCard />
+          </div>
+          <div className="lg:col-span-1 xl:col-span-2">
             <ReflectionReviewCard />
           </div>
 
