@@ -19,8 +19,8 @@ export const metadata: Metadata = {
   title: 'DayFlow - Plan Your Day',
   description: 'Intelligent day planner to help you focus and achieve your goals.',
   icons: {
-    icon: '/favicon.ico', // Tells Next.js to look for public/favicon.ico
-    // If you use a different name or type, e.g., '/my-logo.png', let me know!
+    icon: '/favicon.svg', // Tells Next.js to look for public/favicon.svg
+    // You can add other icon types here too, e.g., apple: '/apple-icon.png'
   },
 };
 
