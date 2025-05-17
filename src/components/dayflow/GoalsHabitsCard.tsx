@@ -10,6 +10,7 @@ import { Target, Repeat, PlusCircle, Trash2, Droplet, Dumbbell, BookOpen, Brain 
 import type { Habit, Goal } from '@/types/dayflow';
 import { DEFAULT_HABITS } from '@/types/dayflow';
 import { useToast } from "@/hooks/use-toast";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const habitIcons: Record<string, React.ElementType> = {
   'Drink 8 glasses of water': Droplet,
@@ -28,9 +29,7 @@ export function GoalsHabitsCard() {
   useEffect(() => {
     const storedHabits = localStorage.getItem('dayflow-habits');
     if (storedHabits) {
-      // Parse stored habits (which won't have functional icons)
       const parsedHabits: Omit<Habit, 'icon'>[] = JSON.parse(storedHabits);
-      // Re-map to include the actual icon components
       setHabits(
         parsedHabits.map(h => ({
           ...h,
@@ -38,7 +37,6 @@ export function GoalsHabitsCard() {
         }))
       );
     } else {
-      // Initialize with default habits and their icons
       setHabits(DEFAULT_HABITS.map(h => ({...h, icon: habitIcons[h.name] || Repeat })));
     }
 
@@ -49,9 +47,8 @@ export function GoalsHabitsCard() {
   }, []);
 
   useEffect(() => {
-    // Store only serializable parts of habits, excluding the icon component itself
     localStorage.setItem('dayflow-habits', JSON.stringify(
-      habits.map(({ icon, ...rest }) => rest) // Destructure to remove icon before stringifying
+      habits.map(({ icon, ...rest }) => rest)
     ));
   }, [habits]);
 
@@ -83,58 +80,65 @@ export function GoalsHabitsCard() {
 
   return (
     <Card className="shadow-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-2xl">
-          <Target className="text-primary" />
-          Goals & Habits
-        </CardTitle>
-        <CardDescription>Track your daily habits and micro-goals.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div>
-          <h3 className="font-semibold text-lg mb-2 flex items-center gap-2"><Repeat className="text-accent" /> Daily Habits</h3>
-          <ul className="space-y-2">
-            {habits.map(habit => {
-              const IconComponent = habit.icon || Repeat; // Ensure IconComponent is a valid component
-              return (
-                <li key={habit.id} className="flex items-center gap-2 p-2 bg-card rounded-md hover:bg-secondary/30 transition-colors">
-                  <Checkbox id={`habit-${habit.id}`} checked={habit.completed} onCheckedChange={() => toggleHabit(habit.id)} />
-                  <IconComponent className="h-5 w-5 text-muted-foreground" />
-                  <label htmlFor={`habit-${habit.id}`} className={`flex-1 text-sm ${habit.completed ? 'line-through text-muted-foreground' : ''}`}>{habit.name}</label>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-        <div>
-          <h3 className="font-semibold text-lg mb-2 flex items-center gap-2"><Target className="text-accent" /> Micro Goals</h3>
-          <div className="flex gap-2 mb-2">
-            <Input
-              value={newGoal}
-              onChange={(e) => setNewGoal(e.target.value)}
-              placeholder="Add a micro goal"
-              onKeyPress={(e) => e.key === 'Enter' && addGoal()}
-            />
-            <Button onClick={addGoal} size="icon"><PlusCircle /></Button>
-          </div>
-          {goals.length > 0 ? (
-            <ul className="space-y-2 max-h-40 overflow-y-auto pr-2">
-              {goals.map(goal => (
-                <li key={goal.id} className="flex items-center gap-2 p-2 bg-card rounded-md hover:bg-secondary/30 transition-colors">
-                   <Checkbox id={`goal-${goal.id}`} checked={!!goal.achieved} onCheckedChange={() => toggleGoal(goal.id)} />
-                  <label htmlFor={`goal-${goal.id}`} className={`flex-1 text-sm ${goal.achieved ? 'line-through text-muted-foreground' : ''}`}>{goal.text}</label>
-                  <Button variant="ghost" size="icon" onClick={() => removeGoal(goal.id)} className="h-7 w-7">
-                    <Trash2 className="h-4 w-4 text-destructive/70 hover:text-destructive" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground italic text-center py-2">No micro goals set. Add one!</p>
-          )}
-        </div>
-      </CardContent>
+      <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+        <AccordionItem value="item-1" className="border-none">
+          <AccordionTrigger className="w-full text-left hover:no-underline p-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <Target className="text-primary" />
+                Goals & Habits
+              </CardTitle>
+              <CardDescription>Track your daily habits and micro-goals.</CardDescription>
+            </CardHeader>
+          </AccordionTrigger>
+          <AccordionContent>
+            <CardContent className="space-y-6 p-6 pt-2">
+              <div>
+                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2"><Repeat className="text-accent" /> Daily Habits</h3>
+                <ul className="space-y-2">
+                  {habits.map(habit => {
+                    const IconComponent = habit.icon || Repeat;
+                    return (
+                      <li key={habit.id} className="flex items-center gap-2 p-2 bg-card rounded-md hover:bg-secondary/30 transition-colors">
+                        <Checkbox id={`habit-${habit.id}`} checked={habit.completed} onCheckedChange={() => toggleHabit(habit.id)} />
+                        <IconComponent className="h-5 w-5 text-muted-foreground" />
+                        <label htmlFor={`habit-${habit.id}`} className={`flex-1 text-sm ${habit.completed ? 'line-through text-muted-foreground' : ''}`}>{habit.name}</label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2"><Target className="text-accent" /> Micro Goals</h3>
+                <div className="flex gap-2 mb-2">
+                  <Input
+                    value={newGoal}
+                    onChange={(e) => setNewGoal(e.target.value)}
+                    placeholder="Add a micro goal"
+                    onKeyPress={(e) => e.key === 'Enter' && addGoal()}
+                  />
+                  <Button onClick={addGoal} size="icon"><PlusCircle /></Button>
+                </div>
+                {goals.length > 0 ? (
+                  <ul className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                    {goals.map(goal => (
+                      <li key={goal.id} className="flex items-center gap-2 p-2 bg-card rounded-md hover:bg-secondary/30 transition-colors">
+                        <Checkbox id={`goal-${goal.id}`} checked={!!goal.achieved} onCheckedChange={() => toggleGoal(goal.id)} />
+                        <label htmlFor={`goal-${goal.id}`} className={`flex-1 text-sm ${goal.achieved ? 'line-through text-muted-foreground' : ''}`}>{goal.text}</label>
+                        <Button variant="ghost" size="icon" onClick={() => removeGoal(goal.id)} className="h-7 w-7">
+                          <Trash2 className="h-4 w-4 text-destructive/70 hover:text-destructive" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic text-center py-2">No micro goals set. Add one!</p>
+                )}
+              </div>
+            </CardContent>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </Card>
   );
 }
-

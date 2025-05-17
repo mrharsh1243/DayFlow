@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Clock, PlusCircle, Trash2, Lock, Edit3 } from "lucide-react"; // CheckSquare, XSquare removed as they are not used
+import { Clock, PlusCircle, Trash2, Lock, Edit3 } from "lucide-react";
 import type { Task, TimeSlot as TimeSlotType } from '@/types/dayflow'; 
 import { TIME_SLOTS } from '@/types/dayflow';
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +21,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '../ui/checkbox';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface ScheduledTask extends Task {
   timeSlotId: string;
@@ -40,7 +41,7 @@ export function TimeBlockingCard() {
         setTasks(JSON.parse(storedTasks));
       } catch (error) {
         console.error("Error parsing timeblock tasks from localStorage", error);
-        setTasks({}); // Fallback to empty if parsing fails
+        setTasks({});
       }
     } else {
       setTasks({});
@@ -48,7 +49,7 @@ export function TimeBlockingCard() {
   };
 
   useEffect(() => {
-    loadTasks(); // Initial load
+    loadTasks();
 
     const handleDataChange = () => {
       setRefreshKey(prev => prev + 1);
@@ -60,13 +61,12 @@ export function TimeBlockingCard() {
   }, []);
 
   useEffect(() => {
-    if (refreshKey > 0) { // Avoid re-load on initial mount if already loaded
+    if (refreshKey > 0) {
         loadTasks();
     }
   }, [refreshKey]);
 
   useEffect(() => {
-     // Avoid saving empty initial state immediately if it was just loaded
     if (Object.keys(tasks).length > 0 || refreshKey > 0) {
         localStorage.setItem('dayflow-timeblock-tasks', JSON.stringify(tasks));
     }
@@ -132,26 +132,34 @@ export function TimeBlockingCard() {
 
   return (
     <Card className="shadow-lg col-span-1 lg:col-span-2">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-2xl">
-          <Clock className="text-primary" />
-          Time Blocking Schedule
-        </CardTitle>
-        <CardDescription>Plan your day hour by hour from 6 AM to 10 PM.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {TIME_SLOTS.map(slot => (
-          <TimeSlot
-            key={slot.id}
-            slot={slot}
-            tasks={tasks[slot.id] || []}
-            onAddTask={(taskText, isLocked) => addTaskToSlot(slot.id, taskText, isLocked)}
-            onRemoveTask={(taskId) => removeTaskFromSlot(slot.id, taskId)}
-            onToggleTask={(taskId) => toggleTaskCompletion(slot.id, taskId)}
-            onEditTask={startEditing}
-          />
-        ))}
-      </CardContent>
+      <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+        <AccordionItem value="item-1" className="border-none">
+          <AccordionTrigger className="w-full text-left hover:no-underline p-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <Clock className="text-primary" />
+                Time Blocking Schedule
+              </CardTitle>
+              <CardDescription>Plan your day hour by hour from 6 AM to 10 PM.</CardDescription>
+            </CardHeader>
+          </AccordionTrigger>
+          <AccordionContent>
+            <CardContent className="space-y-4 p-6 pt-2">
+              {TIME_SLOTS.map(slot => (
+                <TimeSlot
+                  key={slot.id}
+                  slot={slot}
+                  tasks={tasks[slot.id] || []}
+                  onAddTask={(taskText, isLocked) => addTaskToSlot(slot.id, taskText, isLocked)}
+                  onRemoveTask={(taskId) => removeTaskFromSlot(slot.id, taskId)}
+                  onToggleTask={(taskId) => toggleTaskCompletion(slot.id, taskId)}
+                  onEditTask={startEditing}
+                />
+              ))}
+            </CardContent>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
        {editingTask && (
         <Dialog open={!!editingTask} onOpenChange={(isOpen) => !isOpen && cancelEditing()}>
           <DialogContent>
