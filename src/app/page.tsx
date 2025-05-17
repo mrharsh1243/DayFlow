@@ -17,39 +17,22 @@ export default function DayFlowPage() {
       <main className="flex-1 container mx-auto p-4 md:p-6 lg:p-8">
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           
-          {/* Row 1: Daily Overview beside AI + Pomodoro */}
-          <div className="lg:col-span-2 xl:col-span-2">
+          {/* Primary Content Column */}
+          {/* On md, takes 1/2 width. On lg, takes 2/3 width. On xl, takes 3/4 width. */}
+          <div className="space-y-6 md:col-span-1 lg:col-span-2 xl:col-span-3">
             <DailyOverviewCard />
-          </div>
-          
-          <div className="flex flex-col gap-6 lg:col-span-1 xl:col-span-2">
-             <AiFeaturesCard />
-             <PomodoroTimerCard />
-          </div>
-
-          {/* Row 2: Time Blocking full width */}
-          <div className="md:col-span-2 lg:col-span-3 xl:col-span-4">
             <TimeBlockingCard />
-          </div>
-
-          {/* Row 3: ToDo and Goals */}
-          <div className="lg:col-span-1 xl:col-span-2">
             <ToDoListCard />
           </div>
-          <div className="lg:col-span-1 xl:col-span-2">
-            <GoalsHabitsCard />
-          </div>
-          
-          {/* Row 4: Meal Planner and Notes */}
-          <div className="lg:col-span-1 xl:col-span-2">
-            <MealPlannerCard />
-          </div>
-          <div className="lg:col-span-1 xl:col-span-2">
-            <NotesIdeasCard />
-          </div>
 
-          {/* Row 5: Reflection - can span if needed */}
-          <div className="lg:col-span-1 xl:col-span-2">
+          {/* Secondary Content Column / Sidebar */}
+          {/* On md, takes 1/2 width. On lg, takes 1/3 width. On xl, takes 1/4 width. */}
+          <div className="space-y-6 md:col-span-1 lg:col-span-1 xl:col-span-1">
+            <AiFeaturesCard />
+            <PomodoroTimerCard />
+            <GoalsHabitsCard />
+            <MealPlannerCard />
+            <NotesIdeasCard />
             <ReflectionReviewCard />
           </div>
 
