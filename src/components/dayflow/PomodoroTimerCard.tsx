@@ -136,21 +136,21 @@ export function PomodoroTimerCard() {
             </CardHeader>
           </AccordionTrigger>
           <AccordionContent>
-            <CardContent className="space-y-6 p-6 pt-2">
-              <div className="flex justify-center space-x-2 mb-4">
-                <Button variant={currentMode === 'work' ? 'default' : 'outline'} onClick={() => selectMode('work')}>
+            <CardContent className="space-y-4 p-6 pt-2"> {/* Reduced space-y-6 to space-y-4 */}
+              <div className="flex flex-wrap justify-center gap-2 mb-2"> {/* Added flex-wrap, changed space-x to gap, reduced mb */}
+                <Button variant={currentMode === 'work' ? 'default' : 'outline'} onClick={() => selectMode('work')} size="sm">
                   <Zap className="mr-2 h-4 w-4" /> Work
                 </Button>
-                <Button variant={currentMode === 'shortBreak' ? 'default' : 'outline'} onClick={() => selectMode('shortBreak')}>
+                <Button variant={currentMode === 'shortBreak' ? 'default' : 'outline'} onClick={() => selectMode('shortBreak')} size="sm">
                   <Coffee className="mr-2 h-4 w-4" /> Short Break
                 </Button>
-                <Button variant={currentMode === 'longBreak' ? 'default' : 'outline'} onClick={() => selectMode('longBreak')}>
+                <Button variant={currentMode === 'longBreak' ? 'default' : 'outline'} onClick={() => selectMode('longBreak')} size="sm">
                   <Coffee className="mr-2 h-4 w-4" /> Long Break
                 </Button>
               </div>
 
               <div className="text-center">
-                <p className="text-6xl font-bold text-primary tabular-nums">
+                <p className="text-5xl sm:text-6xl font-bold text-primary tabular-nums"> {/* Responsive font size */}
                   {formatTime(timeLeft)}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -158,16 +158,16 @@ export function PomodoroTimerCard() {
                 </p>
               </div>
 
-              <div className="flex justify-center space-x-3">
-                <Button onClick={toggleTimer} variant="default" size="lg" className="px-8">
+              <div className="flex flex-wrap justify-center gap-3"> {/* Added flex-wrap, changed space-x to gap */}
+                <Button onClick={toggleTimer} variant="default" size="lg" className="px-6 sm:px-8"> {/* Adjusted padding */}
                   {isRunning ? <Pause className="mr-2 h-5 w-5" /> : <Play className="mr-2 h-5 w-5" />}
                   {isRunning ? 'Pause' : 'Start'}
                 </Button>
-                <Button onClick={resetTimer} variant="outline" size="lg">
+                <Button onClick={resetTimer} variant="outline" size="lg" className="px-6 sm:px-8"> {/* Adjusted padding */}
                   <RotateCcw className="mr-2 h-5 w-5" /> Reset
                 </Button>
               </div>
-              <div className="text-center text-sm text-muted-foreground mt-4">
+              <div className="text-center text-sm text-muted-foreground mt-2"> {/* Reduced mt */}
                 Pomodoros completed this cycle: {pomodorosCompleted % POMODOROS_BEFORE_LONG_BREAK} / {POMODOROS_BEFORE_LONG_BREAK}
                 <br />
                 Total pomodoros today: {pomodorosCompleted}
