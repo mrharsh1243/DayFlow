@@ -224,6 +224,7 @@ export function AiFeaturesCard() {
       const storedTimeblockTasks = localStorage.getItem('dayflow-timeblock-tasks');
       let tasksByTimeSlot: Record<string, Task[]> = storedTimeblockTasks ? JSON.parse(storedTimeblockTasks) : {};
       
+      // Clear existing non-locked tasks, keep locked ones
       for (const slotId in tasksByTimeSlot) {
         tasksByTimeSlot[slotId] = tasksByTimeSlot[slotId].filter(task => task.isLocked);
       }
@@ -235,15 +236,18 @@ export function AiFeaturesCard() {
             tasksByTimeSlot[timeSlotId] = [];
           }
           const newTask: Task = {
-            id: `${Date.now().toString()}-${item.taskName.replace(/\s+/g, '-')}`,
+            id: `${Date.now().toString()}-${item.taskName.replace(/\s+/g, '-')}`, // Ensure unique ID
             text: item.taskName,
             completed: false,
-            isLocked: fixedEvents?.toLowerCase().includes(item.taskName.toLowerCase()),
+            // Determine if it's a fixed event that should be locked
+            isLocked: fixedEvents?.toLowerCase().includes(item.taskName.toLowerCase()), 
           };
+          // Avoid adding duplicate tasks if one with the same text already exists in the slot (e.g. manually added fixed event)
           if (!tasksByTimeSlot[timeSlotId].find(t => t.text === newTask.text)) {
              tasksByTimeSlot[timeSlotId].push(newTask);
           }
         } else {
+            // Optionally, inform the user or log if a task couldn't be placed
             console.warn(`Could not find time slot for AI suggested time: ${item.suggestedStartTime} for task ${item.taskName}`);
         }
       });
@@ -359,26 +363,26 @@ export function AiFeaturesCard() {
                     <DialogTitle>Intelligent Task Suggestion</DialogTitle>
                     <DialogDescription>Provide context for the AI to suggest relevant tasks for your Top Priorities.</DialogDescription>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
-                    <div className="grid grid-cols-4 items-start gap-4">
-                      <Label htmlFor="userHistory" className="text-right pt-2">Your Habits</Label>
-                      <Textarea id="userHistory" value={userHistory} onChange={(e) => setUserHistory(e.target.value)} className="col-span-3" placeholder="e.g., Morning run, work on Project X" />
+                  <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
+                    <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                      <Label htmlFor="userHistorySuggest" className="text-right pt-2 col-span-1">Your Habits</Label>
+                      <Textarea id="userHistorySuggest" value={userHistory} onChange={(e) => setUserHistory(e.target.value)} className="col-span-3" placeholder="e.g., Morning run, work on Project X" />
                     </div>
-                    <div className="grid grid-cols-4 items-start gap-4">
-                      <Label htmlFor="currentScheduleText" className="text-right pt-2">Today's Fixed Events</Label>
-                      <Textarea id="currentScheduleText" value={currentScheduleText} onChange={(e) => setCurrentScheduleText(e.target.value)} className="col-span-3" placeholder="e.g., 10 AM Meeting, 1 PM Lunch" />
+                    <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                      <Label htmlFor="currentScheduleTextSuggest" className="text-right pt-2 col-span-1">Today's Fixed Events</Label>
+                      <Textarea id="currentScheduleTextSuggest" value={currentScheduleText} onChange={(e) => setCurrentScheduleText(e.target.value)} className="col-span-3" placeholder="e.g., 10 AM Meeting, 1 PM Lunch" />
                     </div>
-                    <div className="grid grid-cols-4 items-start gap-4">
-                      <Label htmlFor="prioritiesContext" className="text-right pt-2">Top Priorities Context</Label>
-                      <Textarea id="prioritiesContext" value={prioritiesContext} onChange={(e) => setPrioritiesContext(e.target.value)} className="col-span-3" placeholder="e.g., Finish report, Call John" />
+                    <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                      <Label htmlFor="prioritiesContextSuggest" className="text-right pt-2 col-span-1">Top Priorities Context</Label>
+                      <Textarea id="prioritiesContextSuggest" value={prioritiesContext} onChange={(e) => setPrioritiesContext(e.target.value)} className="col-span-3" placeholder="e.g., Finish report, Call John" />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="weatherForecast" className="text-right">Weather (Optional)</Label>
-                      <Input id="weatherForecast" value={weatherForecast} onChange={(e) => setWeatherForecast(e.target.value)} className="col-span-3" placeholder="e.g., Sunny, 22°C" />
+                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                      <Label htmlFor="weatherForecastSuggest" className="text-right col-span-1">Weather (Optional)</Label>
+                      <Input id="weatherForecastSuggest" value={weatherForecast} onChange={(e) => setWeatherForecast(e.target.value)} className="col-span-3" placeholder="e.g., Sunny, 22°C" />
                     </div>
                   
                     {suggestedTasksResult && (
-                      <div className="col-span-4 mt-4 p-3 bg-secondary/50 rounded-md">
+                      <div className="col-span-4 mt-4 p-3 bg-secondary/50 rounded-md max-h-[30vh] overflow-y-auto">
                         <h4 className="font-semibold mb-2">Suggested Tasks for Priorities:</h4>
                         <ul className="list-disc list-inside space-y-2 text-sm">
                           {suggestedTasksResult.map((task, index) => (
@@ -393,7 +397,7 @@ export function AiFeaturesCard() {
                       </div>
                     )}
                   </div>
-                  <DialogFooter>
+                  <DialogFooter className="pt-4 border-t">
                     <Button onClick={handleSuggestTasks} disabled={isLoadingTasks}>
                       {isLoadingTasks ? "Suggesting..." : "Get Suggestions"}
                     </Button>
@@ -412,34 +416,34 @@ export function AiFeaturesCard() {
                     <DialogTitle>AI Schedule Single Locked Time</DialogTitle>
                     <DialogDescription>Let AI find the best slot for one fixed task/appointment.</DialogDescription>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="taskName" className="text-right">Task Name</Label>
-                      <Input id="taskName" value={taskName} onChange={(e) => setTaskName(e.target.value)} className="col-span-3" placeholder="e.g., Doctor's appointment" />
+                  <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
+                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                      <Label htmlFor="taskNameSchedule" className="text-right col-span-1">Task Name</Label>
+                      <Input id="taskNameSchedule" value={taskName} onChange={(e) => setTaskName(e.target.value)} className="col-span-3" placeholder="e.g., Doctor's appointment" />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="durationMinutes" className="text-right">Duration (min)</Label>
-                      <Input id="durationMinutes" type="number" value={durationMinutes} onChange={(e) => setDurationMinutes(parseInt(e.target.value))} className="col-span-3" />
+                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                      <Label htmlFor="durationMinutesSchedule" className="text-right col-span-1">Duration (min)</Label>
+                      <Input id="durationMinutesSchedule" type="number" value={durationMinutes} onChange={(e) => setDurationMinutes(parseInt(e.target.value))} className="col-span-3" />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="earliestStartTime" className="text-right">Earliest Start</Label>
-                      <Input id="earliestStartTime" type="time" value={earliestStartTime} onChange={(e) => setEarliestStartTime(e.target.value)} className="col-span-3" />
+                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                      <Label htmlFor="earliestStartTimeSchedule" className="text-right col-span-1">Earliest Start</Label>
+                      <Input id="earliestStartTimeSchedule" type="time" value={earliestStartTime} onChange={(e) => setEarliestStartTime(e.target.value)} className="col-span-3" />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="latestEndTime" className="text-right">Latest End</Label>
-                      <Input id="latestEndTime" type="time" value={latestEndTime} onChange={(e) => setLatestEndTime(e.target.value)} className="col-span-3" />
+                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                      <Label htmlFor="latestEndTimeSchedule" className="text-right col-span-1">Latest End</Label>
+                      <Input id="latestEndTimeSchedule" type="time" value={latestEndTime} onChange={(e) => setLatestEndTime(e.target.value)} className="col-span-3" />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="bufferBefore" className="text-right">Buffer Before (min)</Label>
-                      <Input id="bufferBefore" type="number" value={bufferBefore} onChange={(e) => setBufferBefore(parseInt(e.target.value))} className="col-span-3" />
+                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                      <Label htmlFor="bufferBeforeSchedule" className="text-right col-span-1">Buffer Before (min)</Label>
+                      <Input id="bufferBeforeSchedule" type="number" value={bufferBefore} onChange={(e) => setBufferBefore(parseInt(e.target.value))} className="col-span-3" />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="bufferAfter" className="text-right">Buffer After (min)</Label>
-                      <Input id="bufferAfter" type="number" value={bufferAfter} onChange={(e) => setBufferAfter(parseInt(e.target.value))} className="col-span-3" />
+                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                      <Label htmlFor="bufferAfterSchedule" className="text-right col-span-1">Buffer After (min)</Label>
+                      <Input id="bufferAfterSchedule" type="number" value={bufferAfter} onChange={(e) => setBufferAfter(parseInt(e.target.value))} className="col-span-3" />
                     </div>
-                    <div className="grid grid-cols-4 items-start gap-4">
-                      <Label htmlFor="otherObligations" className="text-right pt-2">Other Obligations</Label>
-                      <Textarea id="otherObligations" value={otherObligations} onChange={(e) => setOtherObligations(e.target.value)} className="col-span-3" placeholder="e.g., Travel time, existing meetings" />
+                    <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                      <Label htmlFor="otherObligationsSchedule" className="text-right pt-2 col-span-1">Other Obligations</Label>
+                      <Textarea id="otherObligationsSchedule" value={otherObligations} onChange={(e) => setOtherObligations(e.target.value)} className="col-span-3" placeholder="e.g., Travel time, existing meetings" />
                     </div>
                   
                   {scheduleResult && (
@@ -452,7 +456,7 @@ export function AiFeaturesCard() {
                     </div>
                   )}
                   </div>
-                  <DialogFooter>
+                  <DialogFooter className="pt-4 border-t">
                     <Button onClick={handleScheduleLockedTime} disabled={isLoadingSchedule}>
                       {isLoadingSchedule ? "Scheduling..." : "Find Slot"}
                     </Button>
@@ -466,3 +470,6 @@ export function AiFeaturesCard() {
     </Card>
   );
 }
+
+
+    
