@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '../ui/checkbox';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ScheduledTask extends Task {
   timeSlotId: string;
@@ -34,7 +35,7 @@ export function TimeBlockingCard() {
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const loadTasks = () => {
+  const loadTasks = useCallback(() => {
     const storedTasks = localStorage.getItem('dayflow-timeblock-tasks');
     if (storedTasks) {
       try {
@@ -46,7 +47,7 @@ export function TimeBlockingCard() {
     } else {
       setTasks({});
     }
-  };
+  }, []); 
 
   useEffect(() => {
     loadTasks();
@@ -58,16 +59,16 @@ export function TimeBlockingCard() {
     return () => {
       window.removeEventListener('dayflow-datachanged', handleDataChange);
     };
-  }, []);
+  }, [loadTasks]); 
 
   useEffect(() => {
     if (refreshKey > 0) {
         loadTasks();
     }
-  }, [refreshKey]);
+  }, [refreshKey, loadTasks]); 
 
   useEffect(() => {
-    if (Object.keys(tasks).length > 0 || refreshKey > 0) {
+    if (Object.keys(tasks).length > 0 || refreshKey > 0) { 
         localStorage.setItem('dayflow-timeblock-tasks', JSON.stringify(tasks));
     }
   }, [tasks, refreshKey]);
@@ -86,7 +87,7 @@ export function TimeBlockingCard() {
       [timeSlotId]: [...(prevTasks[timeSlotId] || []), newTask]
     }));
     toast({ title: "Task Added", description: `"${taskText}" added to ${TIME_SLOTS.find(s=>s.id === timeSlotId)?.label}.` });
-  }, [toast]);
+  }, [toast]); 
 
   const removeTaskFromSlot = (timeSlotId: string, taskId: string) => {
     setTasks(prevTasks => ({
@@ -131,7 +132,7 @@ export function TimeBlockingCard() {
 
 
   return (
-    <Card className="shadow-lg col-span-1 lg:col-span-2">
+    <Card className="shadow-lg md:col-span-2 lg:col-span-3 xl:col-span-4"> 
       <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
         <AccordionItem value="item-1" className="border-none">
           <AccordionTrigger className="w-full text-left hover:no-underline p-0 focus-visible:ring-0 focus-visible:ring-offset-0">
@@ -144,27 +145,32 @@ export function TimeBlockingCard() {
             </CardHeader>
           </AccordionTrigger>
           <AccordionContent>
-            <CardContent className="space-y-4 p-6 pt-2">
-              {TIME_SLOTS.map(slot => (
-                <TimeSlot
-                  key={slot.id}
-                  slot={slot}
-                  tasks={tasks[slot.id] || []}
-                  onAddTask={(taskText, isLocked) => addTaskToSlot(slot.id, taskText, isLocked)}
-                  onRemoveTask={(taskId) => removeTaskFromSlot(slot.id, taskId)}
-                  onToggleTask={(taskId) => toggleTaskCompletion(slot.id, taskId)}
-                  onEditTask={startEditing}
-                />
-              ))}
+            <CardContent className="p-6 pt-2">
+              <ScrollArea className="h-[60vh] pr-3"> 
+                <div className="space-y-3"> 
+                  {TIME_SLOTS.map(slot => (
+                    <TimeSlot
+                      key={slot.id}
+                      slot={slot}
+                      tasks={tasks[slot.id] || []}
+                      onAddTask={(taskText, isLocked) => addTaskToSlot(slot.id, taskText, isLocked)}
+                      onRemoveTask={(taskId) => removeTaskFromSlot(slot.id, taskId)}
+                      onToggleTask={(taskId) => toggleTaskCompletion(slot.id, taskId)}
+                      onEditTask={startEditing}
+                    />
+                  ))}
+                </div>
+              </ScrollArea>
             </CardContent>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
        {editingTask && (
         <Dialog open={!!editingTask} onOpenChange={(isOpen) => !isOpen && cancelEditing()}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px]"> 
             <DialogHeader>
               <DialogTitle>Edit Task</DialogTitle>
+              <DialogDescription>Make changes to your task description here.</DialogDescription>
             </DialogHeader>
             <div className="py-4">
               <Input 
@@ -209,16 +215,16 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
   };
 
   return (
-    <div className="p-3 border rounded-lg bg-card hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-center mb-2">
-        <h4 className="font-semibold text-primary">{slot.label}</h4>
+    <div className="p-3 border rounded-lg bg-card/60 hover:shadow-sm transition-shadow"> 
+      <div className="flex justify-between items-center mb-1.5"> 
+        <h4 className="font-semibold text-primary text-base">{slot.label}</h4> 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <PlusCircle className="mr-1 h-4 w-4" /> Add Task
+            <Button variant="ghost" size="sm" className="text-sm"> 
+              <PlusCircle className="mr-1.5 h-4 w-4" /> Add
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Add Task to {slot.label}</DialogTitle>
               <DialogDescription>
@@ -226,19 +232,20 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor={`task-text-${slot.id}`} className="text-right">Task</Label>
+              <div className="grid grid-cols-4 items-start gap-4"> 
+                <Label htmlFor={`task-text-${slot.id}`} className="text-right pt-1.5">Task</Label> 
                 <Textarea 
                   id={`task-text-${slot.id}`}
                   value={newTaskText} 
                   onChange={(e) => setNewTaskText(e.target.value)} 
                   className="col-span-3"
                   placeholder="Describe the task"
+                  rows={2} 
                 />
               </div>
-              <div className="flex items-center space-x-2 ml-auto mr-auto pl-[25%]">
+              <div className="flex items-center space-x-2 col-start-2 col-span-3"> 
                 <Checkbox id={`is-locked-${slot.id}`} checked={isLockedSlot} onCheckedChange={(checked) => setIsLockedSlot(checked as boolean)} />
-                <Label htmlFor={`is-locked-${slot.id}`}>Mark as locked time (e.g., meeting)</Label>
+                <Label htmlFor={`is-locked-${slot.id}`} className="text-sm font-normal">Mark as locked time</Label> 
               </div>
             </div>
             <DialogFooter>
@@ -249,28 +256,30 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
         </Dialog>
       </div>
       {tasks.length > 0 ? (
-        <ul className="space-y-1 text-sm">
+        <ul className="space-y-1.5 text-sm"> 
           {tasks.map(task => (
-            <li key={task.id} className={`flex items-center gap-2 p-1.5 rounded ${task.isLocked ? 'bg-secondary/50' : ''}`}>
-              <Checkbox id={`task-${slot.id}-${task.id}`} checked={task.completed} onCheckedChange={() => onToggleTask(task.id)} disabled={task.isLocked} />
-              <span className={`flex-1 ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
-                {task.isLocked && <Lock className="inline h-3 w-3 mr-1 text-accent" />}
+            <li key={task.id} className={`flex items-center gap-2 p-1.5 rounded ${task.isLocked ? 'bg-primary/10' : 'bg-muted/40'}`}> 
+              <Checkbox id={`task-${slot.id}-${task.id}`} checked={task.completed} onCheckedChange={() => onToggleTask(task.id)} disabled={task.isLocked} aria-label={`Mark task ${task.text} as ${task.completed ? 'incomplete' : 'complete'}`}/>
+              <span className={`flex-1 ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                {task.isLocked && <Lock className="inline h-3.5 w-3.5 mr-1.5 text-accent" />} 
                 {task.text}
               </span>
               {!task.isLocked && (
-                 <Button variant="ghost" size="icon" onClick={() => onEditTask(task)} className="h-6 w-6">
-                    <Edit3 className="h-4 w-4 text-blue-500/70 hover:text-blue-500" />
+                 <Button variant="ghost" size="icon" onClick={() => onEditTask(task)} className="h-7 w-7" aria-label={`Edit task ${task.text}`}> 
+                    <Edit3 className="h-4 w-4 text-primary/80 hover:text-primary" />
                   </Button>
               )}
-              <Button variant="ghost" size="icon" onClick={() => onRemoveTask(task.id)} className="h-6 w-6">
-                <Trash2 className="h-4 w-4 text-destructive/70 hover:text-destructive" />
+              <Button variant="ghost" size="icon" onClick={() => onRemoveTask(task.id)} className="h-7 w-7" aria-label={`Remove task ${task.text}`}> 
+                <Trash2 className="h-4 w-4 text-destructive/80 hover:text-destructive" />
               </Button>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-xs text-muted-foreground italic">No tasks scheduled for this slot.</p>
+        <p className="text-xs text-muted-foreground italic px-1 py-2">No tasks for this slot.</p> 
       )}
     </div>
   );
 }
+
+    
