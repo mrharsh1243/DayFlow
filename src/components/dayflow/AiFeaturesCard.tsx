@@ -246,7 +246,6 @@ export function AiFeaturesCard() {
             isLocked: fixedEvents?.toLowerCase().includes(item.taskName.toLowerCase()), // Mark as locked if it was a fixed event
           };
           // Avoid adding duplicate tasks to the same slot if AI suggests multiple things for one slot.
-          // This is a simple check; more robust duplicate handling might be needed.
           if (!tasksByTimeSlot[timeSlotId].find(t => t.text === newTask.text)) {
              tasksByTimeSlot[timeSlotId].push(newTask);
           }
@@ -278,47 +277,50 @@ export function AiFeaturesCard() {
         {/* Generate Smart Schedule */}
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="w-full" variant="default"> {/* Prominent button */}
+            <Button className="w-full" variant="default">
               <BrainCircuit className="mr-2 h-4 w-4" /> Generate Smart Schedule
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[700px]"> {/* Wider dialog */}
+          <DialogContent className="sm:max-w-[700px]">
             <DialogHeader>
               <DialogTitle>Generate Smart Schedule</DialogTitle>
               <DialogDescription>Provide details for the AI to create a comprehensive schedule for your day.</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-2"> {/* Adjusted max-h and added responsive max-h */}
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="overallGoal" className="text-right pt-2">Overall Goal</Label>
+            {/* Scrollable container for form inputs */}
+            <div className="space-y-4 py-4 max-h-[45vh] overflow-y-auto pr-2">
+              <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                <Label htmlFor="overallGoal" className="text-right pt-2 col-span-1">Overall Goal</Label>
                 <Textarea id="overallGoal" value={overallGoal} onChange={(e) => setOverallGoal(e.target.value)} className="col-span-3" placeholder="e.g., Focus on Project X, prepare for presentation" />
               </div>
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="tasksToSchedule" className="text-right pt-2">Tasks (one per line)</Label>
+              <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                <Label htmlFor="tasksToSchedule" className="text-right pt-2 col-span-1">Tasks (one per line)</Label>
                 <Textarea id="tasksToSchedule" value={tasksToSchedule} onChange={(e) => setTasksToSchedule(e.target.value)} className="col-span-3" placeholder="e.g., Write report\nCall client\nGym session" rows={4}/>
               </div>
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="fixedEvents" className="text-right pt-2">Fixed Events</Label>
+              <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                <Label htmlFor="fixedEvents" className="text-right pt-2 col-span-1">Fixed Events</Label>
                 <Textarea id="fixedEvents" value={fixedEvents} onChange={(e) => setFixedEvents(e.target.value)} className="col-span-3" placeholder="e.g., Meeting 10-11 AM, Lunch 1-2 PM" />
               </div>
-               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="scheduleAvailableStartTime" className="text-right">Available From</Label>
+              <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                <Label htmlFor="scheduleAvailableStartTime" className="text-right col-span-1">Available From</Label>
                 <Input id="scheduleAvailableStartTime" type="time" value={scheduleAvailableStartTime} onChange={(e) => setScheduleAvailableStartTime(e.target.value)} className="col-span-3" />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="scheduleAvailableEndTime" className="text-right">Available Until</Label>
+              <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                <Label htmlFor="scheduleAvailableEndTime" className="text-right col-span-1">Available Until</Label>
                 <Input id="scheduleAvailableEndTime" type="time" value={scheduleAvailableEndTime} onChange={(e) => setScheduleAvailableEndTime(e.target.value)} className="col-span-3" />
               </div>
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="schedulePreferences" className="text-right pt-2">Preferences</Label>
+              <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                <Label htmlFor="schedulePreferences" className="text-right pt-2 col-span-1">Preferences</Label>
                 <Textarea id="schedulePreferences" value={schedulePreferences} onChange={(e) => setSchedulePreferences(e.target.value)} className="col-span-3" placeholder="e.g., Morning for deep work, short breaks every 90 mins" />
               </div>
-               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="currentDateTime" className="text-right">Current Context</Label>
+              <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                <Label htmlFor="currentDateTime" className="text-right col-span-1">Current Context</Label>
                 <Input id="currentDateTime" value={currentDateTime} onChange={(e) => setCurrentDateTime(e.target.value)} className="col-span-3" readOnly disabled />
               </div>
+            </div>
             
-              {smartScheduleResult && (
-                <div className="col-span-4 mt-4 p-4 bg-secondary/30 rounded-md max-h-[30vh] sm:max-h-[40vh] overflow-y-auto"> {/* Adjusted max-h and added responsive max-h */}
+            {/* Conditionally rendered, scrollable container for results */}
+            {smartScheduleResult && (
+                <div className="mt-1 p-4 bg-secondary/30 rounded-md max-h-[30vh] overflow-y-auto border-t">
                   <h4 className="font-semibold mb-2 text-lg">AI's Proposed Schedule:</h4>
                   {smartScheduleResult.overallSummary && (
                       <p className="text-sm italic mb-3 p-2 bg-background/50 rounded">{smartScheduleResult.overallSummary}</p>
@@ -342,8 +344,7 @@ export function AiFeaturesCard() {
                   )}
                 </div>
               )}
-            </div>
-            <DialogFooter>
+            <DialogFooter className="pt-4 border-t">
               <Button onClick={handleGenerateSmartSchedule} disabled={isLoadingSmartSchedule} className="w-full sm:w-auto">
                 {isLoadingSmartSchedule ? "Generating..." : "Generate My Schedule"}
               </Button>
@@ -364,16 +365,16 @@ export function AiFeaturesCard() {
               <DialogDescription>Provide context for the AI to suggest relevant tasks for your Top Priorities.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="userHistory" className="text-right">Your Habits</Label>
+              <div className="grid grid-cols-4 items-start gap-4"> {/* Changed items-center to items-start for Textarea alignment */}
+                <Label htmlFor="userHistory" className="text-right pt-2">Your Habits</Label> {/* Added pt-2 for better alignment */}
                 <Textarea id="userHistory" value={userHistory} onChange={(e) => setUserHistory(e.target.value)} className="col-span-3" placeholder="e.g., Morning run, work on Project X" />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="currentSchedule" className="text-right">Today's Fixed Events</Label>
+              <div className="grid grid-cols-4 items-start gap-4"> {/* Changed items-center to items-start for Textarea alignment */}
+                <Label htmlFor="currentSchedule" className="text-right pt-2">Today's Fixed Events</Label> {/* Added pt-2 for better alignment */}
                 <Textarea id="currentSchedule" value={currentSchedule} onChange={(e) => setCurrentSchedule(e.target.value)} className="col-span-3" placeholder="e.g., 10 AM Meeting, 1 PM Lunch" />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="prioritiesContext" className="text-right">Top Priorities Context</Label>
+              <div className="grid grid-cols-4 items-start gap-4"> {/* Changed items-center to items-start for Textarea alignment */}
+                <Label htmlFor="prioritiesContext" className="text-right pt-2">Top Priorities Context</Label> {/* Added pt-2 for better alignment */}
                 <Textarea id="prioritiesContext" value={prioritiesContext} onChange={(e) => setPrioritiesContext(e.target.value)} className="col-span-3" placeholder="e.g., Finish report, Call John" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -442,8 +443,8 @@ export function AiFeaturesCard() {
                 <Label htmlFor="bufferAfter" className="text-right">Buffer After (min)</Label>
                 <Input id="bufferAfter" type="number" value={bufferAfter} onChange={(e) => setBufferAfter(parseInt(e.target.value))} className="col-span-3" />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="otherObligations" className="text-right">Other Obligations</Label>
+              <div className="grid grid-cols-4 items-start gap-4"> {/* Changed items-center to items-start for Textarea alignment */}
+                <Label htmlFor="otherObligations" className="text-right pt-2">Other Obligations</Label> {/* Added pt-2 for better alignment */}
                 <Textarea id="otherObligations" value={otherObligations} onChange={(e) => setOtherObligations(e.target.value)} className="col-span-3" placeholder="e.g., Travel time, existing meetings" />
               </div>
             
@@ -468,3 +469,6 @@ export function AiFeaturesCard() {
     </Card>
   );
 }
+
+
+    
