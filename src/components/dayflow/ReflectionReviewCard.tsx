@@ -53,7 +53,7 @@ export function ReflectionReviewCard() {
 
   return (
     <Card className="shadow-lg">
-      <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+      <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="item-1" className="border-none">
           <AccordionTrigger className="w-full text-left hover:no-underline p-0 focus-visible:ring-0 focus-visible:ring-offset-0">
             <CardHeader>
