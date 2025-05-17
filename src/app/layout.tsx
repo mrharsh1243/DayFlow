@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: 'DayFlow - Plan Your Day',
   description: 'Intelligent day planner to help you focus and achieve your goals.',
   icons: {
-    icon: '/favicon.svg?v=1', // Added cache-busting query
+    icon: '/favicon.svg?v=2', // Incremented cache-busting query
   },
 };
 
