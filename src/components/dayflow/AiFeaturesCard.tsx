@@ -287,7 +287,7 @@ export function AiFeaturesCard() {
               <DialogTitle>Generate Smart Schedule</DialogTitle>
               <DialogDescription>Provide details for the AI to create a comprehensive schedule for your day.</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
+            <div className="grid gap-4 py-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-2"> {/* Adjusted max-h and added responsive max-h */}
               <div className="grid grid-cols-4 items-start gap-4">
                 <Label htmlFor="overallGoal" className="text-right pt-2">Overall Goal</Label>
                 <Textarea id="overallGoal" value={overallGoal} onChange={(e) => setOverallGoal(e.target.value)} className="col-span-3" placeholder="e.g., Focus on Project X, prepare for presentation" />
@@ -316,32 +316,33 @@ export function AiFeaturesCard() {
                 <Label htmlFor="currentDateTime" className="text-right">Current Context</Label>
                 <Input id="currentDateTime" value={currentDateTime} onChange={(e) => setCurrentDateTime(e.target.value)} className="col-span-3" readOnly disabled />
               </div>
+            
+              {smartScheduleResult && (
+                <div className="col-span-4 mt-4 p-4 bg-secondary/30 rounded-md max-h-[30vh] sm:max-h-[40vh] overflow-y-auto"> {/* Adjusted max-h and added responsive max-h */}
+                  <h4 className="font-semibold mb-2 text-lg">AI's Proposed Schedule:</h4>
+                  {smartScheduleResult.overallSummary && (
+                      <p className="text-sm italic mb-3 p-2 bg-background/50 rounded">{smartScheduleResult.overallSummary}</p>
+                  )}
+                  {smartScheduleResult.scheduledTasks && smartScheduleResult.scheduledTasks.length > 0 ? (
+                    <ul className="space-y-3">
+                      {smartScheduleResult.scheduledTasks.map((item, index) => (
+                        <li key={index} className="p-2 border-b border-primary/20">
+                          <p className="font-medium text-primary-foreground bg-primary/80 px-2 py-1 rounded-t-md">
+                              {item.suggestedStartTime} - {item.taskName}
+                          </p>
+                          {item.justification && <p className="text-xs text-muted-foreground mt-1 pl-1">{item.justification}</p>}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="text-sm text-muted-foreground">AI could not generate a schedule with the given inputs, or no tasks were provided.</p>}
+                  {smartScheduleResult.scheduledTasks && smartScheduleResult.scheduledTasks.length > 0 && (
+                       <Button className="mt-4 w-full" onClick={handleApplySmartScheduleToTimeblocks} disabled={isLoadingSmartSchedule}>
+                          <CalendarPlus className="mr-2 h-4 w-4" /> Apply Schedule to Time Blocks
+                      </Button>
+                  )}
+                </div>
+              )}
             </div>
-            {smartScheduleResult && (
-              <div className="mt-4 p-4 bg-secondary/30 rounded-md max-h-[30vh] overflow-y-auto">
-                <h4 className="font-semibold mb-2 text-lg">AI's Proposed Schedule:</h4>
-                {smartScheduleResult.overallSummary && (
-                    <p className="text-sm italic mb-3 p-2 bg-background/50 rounded">{smartScheduleResult.overallSummary}</p>
-                )}
-                {smartScheduleResult.scheduledTasks && smartScheduleResult.scheduledTasks.length > 0 ? (
-                  <ul className="space-y-3">
-                    {smartScheduleResult.scheduledTasks.map((item, index) => (
-                      <li key={index} className="p-2 border-b border-primary/20">
-                        <p className="font-medium text-primary-foreground bg-primary/80 px-2 py-1 rounded-t-md">
-                            {item.suggestedStartTime} - {item.taskName}
-                        </p>
-                        {item.justification && <p className="text-xs text-muted-foreground mt-1 pl-1">{item.justification}</p>}
-                      </li>
-                    ))}
-                  </ul>
-                ) : <p className="text-sm text-muted-foreground">AI could not generate a schedule with the given inputs, or no tasks were provided.</p>}
-                {smartScheduleResult.scheduledTasks && smartScheduleResult.scheduledTasks.length > 0 && (
-                     <Button className="mt-4 w-full" onClick={handleApplySmartScheduleToTimeblocks} disabled={isLoadingSmartSchedule}>
-                        <CalendarPlus className="mr-2 h-4 w-4" /> Apply Schedule to Time Blocks
-                    </Button>
-                )}
-              </div>
-            )}
             <DialogFooter>
               <Button onClick={handleGenerateSmartSchedule} disabled={isLoadingSmartSchedule} className="w-full sm:w-auto">
                 {isLoadingSmartSchedule ? "Generating..." : "Generate My Schedule"}
@@ -379,22 +380,23 @@ export function AiFeaturesCard() {
                 <Label htmlFor="weatherForecast" className="text-right">Weather (Optional)</Label>
                 <Input id="weatherForecast" value={weatherForecast} onChange={(e) => setWeatherForecast(e.target.value)} className="col-span-3" placeholder="e.g., Sunny, 22°C" />
               </div>
+            
+              {suggestedTasksResult && (
+                <div className="col-span-4 mt-4 p-3 bg-secondary/50 rounded-md">
+                  <h4 className="font-semibold mb-2">Suggested Tasks for Priorities:</h4>
+                  <ul className="list-disc list-inside space-y-2 text-sm">
+                    {suggestedTasksResult.map((task, index) => (
+                      <li key={index} className="flex justify-between items-center">
+                        <span>{task}</span>
+                        <Button size="sm" variant="outline" onClick={() => handleAddSuggestedTaskToPriority(task)}>
+                          <PlusCircle className="mr-2 h-3 w-3" /> Add to Priorities
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-            {suggestedTasksResult && (
-              <div className="mt-4 p-3 bg-secondary/50 rounded-md">
-                <h4 className="font-semibold mb-2">Suggested Tasks for Priorities:</h4>
-                <ul className="list-disc list-inside space-y-2 text-sm">
-                  {suggestedTasksResult.map((task, index) => (
-                    <li key={index} className="flex justify-between items-center">
-                      <span>{task}</span>
-                      <Button size="sm" variant="outline" onClick={() => handleAddSuggestedTaskToPriority(task)}>
-                        <PlusCircle className="mr-2 h-3 w-3" /> Add to Priorities
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
             <DialogFooter>
               <Button onClick={handleSuggestTasks} disabled={isLoadingTasks}>
                 {isLoadingTasks ? "Suggesting..." : "Get Suggestions"}
@@ -444,9 +446,9 @@ export function AiFeaturesCard() {
                 <Label htmlFor="otherObligations" className="text-right">Other Obligations</Label>
                 <Textarea id="otherObligations" value={otherObligations} onChange={(e) => setOtherObligations(e.target.value)} className="col-span-3" placeholder="e.g., Travel time, existing meetings" />
               </div>
-            </div>
+            
              {scheduleResult && (
-              <div className="mt-4 p-3 bg-secondary/50 rounded-md">
+              <div className="col-span-4 mt-4 p-3 bg-secondary/50 rounded-md">
                 <h4 className="font-semibold">Suggested Start Time: {scheduleResult.suggestedStartTime}</h4>
                 <p className="text-sm mt-1"><strong>Justification:</strong> {scheduleResult.justification}</p>
                 <Button className="mt-2 w-full" onClick={handleAddScheduledTaskToTimeblock} disabled={isLoadingSchedule}>
@@ -454,6 +456,7 @@ export function AiFeaturesCard() {
                 </Button>
               </div>
             )}
+            </div>
             <DialogFooter>
               <Button onClick={handleScheduleLockedTime} disabled={isLoadingSchedule}>
                 {isLoadingSchedule ? "Scheduling..." : "Find Slot"}
