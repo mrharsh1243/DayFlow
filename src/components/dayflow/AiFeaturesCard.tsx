@@ -36,7 +36,7 @@ export function AiFeaturesCard() {
   const [smartScheduleResult, setSmartScheduleResult] = useState<SmartScheduleOutput | null>(null);
 
   const [userHistory, setUserHistory] = useState("Completed 'Morning Coffee & Email Check'. Usually works on Project Titan from 10 AM - 12 PM.");
-  const [currentScheduleText, setCurrentScheduleText] = useState("1 PM - Lunch with team. 4 PM - Client Call."); // Renamed to avoid conflict
+  const [currentScheduleText, setCurrentScheduleText] = useState("1 PM - Lunch with team. 4 PM - Client Call.");
   const [prioritiesContext, setPrioritiesContext] = useState("Finalize Q3 report, Prepare presentation slides for Friday.");
   const [weatherForecast, setWeatherForecast] = useState("Sunny, 25°C. Slight chance of rain in the evening.");
 
@@ -224,7 +224,6 @@ export function AiFeaturesCard() {
       const storedTimeblockTasks = localStorage.getItem('dayflow-timeblock-tasks');
       let tasksByTimeSlot: Record<string, Task[]> = storedTimeblockTasks ? JSON.parse(storedTimeblockTasks) : {};
       
-      // Clear existing non-locked tasks, keep locked ones
       for (const slotId in tasksByTimeSlot) {
         tasksByTimeSlot[slotId] = tasksByTimeSlot[slotId].filter(task => task.isLocked);
       }
@@ -236,18 +235,15 @@ export function AiFeaturesCard() {
             tasksByTimeSlot[timeSlotId] = [];
           }
           const newTask: Task = {
-            id: `${Date.now().toString()}-${item.taskName.replace(/\s+/g, '-')}`, // Ensure unique ID
+            id: `${Date.now().toString()}-${item.taskName.replace(/\s+/g, '-')}`,
             text: item.taskName,
             completed: false,
-            // Determine if it's a fixed event that should be locked
             isLocked: fixedEvents?.toLowerCase().includes(item.taskName.toLowerCase()), 
           };
-          // Avoid adding duplicate tasks if one with the same text already exists in the slot (e.g. manually added fixed event)
           if (!tasksByTimeSlot[timeSlotId].find(t => t.text === newTask.text)) {
              tasksByTimeSlot[timeSlotId].push(newTask);
           }
         } else {
-            // Optionally, inform the user or log if a task couldn't be placed
             console.warn(`Could not find time slot for AI suggested time: ${item.suggestedStartTime} for task ${item.taskName}`);
         }
       });
@@ -283,44 +279,45 @@ export function AiFeaturesCard() {
                     <BrainCircuit className="mr-2 h-4 w-4" /> Generate Smart Schedule
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[700px]">
+                <DialogContent className="sm:max-w-[700px] flex flex-col max-h-[85vh]">
                   <DialogHeader>
                     <DialogTitle>Generate Smart Schedule</DialogTitle>
                     <DialogDescription>Provide details for the AI to create a comprehensive schedule for your day.</DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4 py-4 max-h-[45vh] overflow-y-auto pr-2">
-                    <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
-                      <Label htmlFor="overallGoal" className="text-right pt-2 col-span-1">Overall Goal</Label>
-                      <Textarea id="overallGoal" value={overallGoal} onChange={(e) => setOverallGoal(e.target.value)} className="col-span-3" placeholder="e.g., Focus on Project X, prepare for presentation" />
+                  <div className="flex-grow overflow-y-auto py-4 pr-2 space-y-4">
+                    <div className="space-y-4"> {/* Input fields container */}
+                      <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                        <Label htmlFor="overallGoal" className="text-right pt-2 col-span-1">Overall Goal</Label>
+                        <Textarea id="overallGoal" value={overallGoal} onChange={(e) => setOverallGoal(e.target.value)} className="col-span-3" placeholder="e.g., Focus on Project X, prepare for presentation" />
+                      </div>
+                      <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                        <Label htmlFor="tasksToSchedule" className="text-right pt-2 col-span-1">Tasks (one per line)</Label>
+                        <Textarea id="tasksToSchedule" value={tasksToSchedule} onChange={(e) => setTasksToSchedule(e.target.value)} className="col-span-3" placeholder="e.g., Write report\nCall client\nGym session" rows={4}/>
+                      </div>
+                      <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                        <Label htmlFor="fixedEvents" className="text-right pt-2 col-span-1">Fixed Events</Label>
+                        <Textarea id="fixedEvents" value={fixedEvents} onChange={(e) => setFixedEvents(e.target.value)} className="col-span-3" placeholder="e.g., Meeting 10-11 AM, Lunch 1-2 PM" />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                        <Label htmlFor="scheduleAvailableStartTime" className="text-right col-span-1">Available From</Label>
+                        <Input id="scheduleAvailableStartTime" type="time" value={scheduleAvailableStartTime} onChange={(e) => setScheduleAvailableStartTime(e.target.value)} className="col-span-3" />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                        <Label htmlFor="scheduleAvailableEndTime" className="text-right col-span-1">Available Until</Label>
+                        <Input id="scheduleAvailableEndTime" type="time" value={scheduleAvailableEndTime} onChange={(e) => setScheduleAvailableEndTime(e.target.value)} className="col-span-3" />
+                      </div>
+                      <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                        <Label htmlFor="schedulePreferences" className="text-right pt-2 col-span-1">Preferences</Label>
+                        <Textarea id="schedulePreferences" value={schedulePreferences} onChange={(e) => setSchedulePreferences(e.target.value)} className="col-span-3" placeholder="e.g., Morning for deep work, short breaks every 90 mins" />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                        <Label htmlFor="currentDateTimeSmart" className="text-right col-span-1">Current Context</Label>
+                        <Input id="currentDateTimeSmart" value={currentDateTime} onChange={(e) => setCurrentDateTime(e.target.value)} className="col-span-3" readOnly disabled />
+                      </div>
                     </div>
-                    <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
-                      <Label htmlFor="tasksToSchedule" className="text-right pt-2 col-span-1">Tasks (one per line)</Label>
-                      <Textarea id="tasksToSchedule" value={tasksToSchedule} onChange={(e) => setTasksToSchedule(e.target.value)} className="col-span-3" placeholder="e.g., Write report\nCall client\nGym session" rows={4}/>
-                    </div>
-                    <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
-                      <Label htmlFor="fixedEvents" className="text-right pt-2 col-span-1">Fixed Events</Label>
-                      <Textarea id="fixedEvents" value={fixedEvents} onChange={(e) => setFixedEvents(e.target.value)} className="col-span-3" placeholder="e.g., Meeting 10-11 AM, Lunch 1-2 PM" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
-                      <Label htmlFor="scheduleAvailableStartTime" className="text-right col-span-1">Available From</Label>
-                      <Input id="scheduleAvailableStartTime" type="time" value={scheduleAvailableStartTime} onChange={(e) => setScheduleAvailableStartTime(e.target.value)} className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
-                      <Label htmlFor="scheduleAvailableEndTime" className="text-right col-span-1">Available Until</Label>
-                      <Input id="scheduleAvailableEndTime" type="time" value={scheduleAvailableEndTime} onChange={(e) => setScheduleAvailableEndTime(e.target.value)} className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
-                      <Label htmlFor="schedulePreferences" className="text-right pt-2 col-span-1">Preferences</Label>
-                      <Textarea id="schedulePreferences" value={schedulePreferences} onChange={(e) => setSchedulePreferences(e.target.value)} className="col-span-3" placeholder="e.g., Morning for deep work, short breaks every 90 mins" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
-                      <Label htmlFor="currentDateTime" className="text-right col-span-1">Current Context</Label>
-                      <Input id="currentDateTime" value={currentDateTime} onChange={(e) => setCurrentDateTime(e.target.value)} className="col-span-3" readOnly disabled />
-                    </div>
-                  </div>
                   
-                  {smartScheduleResult && (
-                      <div className="mt-1 p-4 bg-secondary/30 rounded-md max-h-[30vh] overflow-y-auto border-t">
+                    {smartScheduleResult && (
+                      <div className="mt-4 p-4 bg-secondary/30 rounded-md border-t"> {/* Results container */}
                         <h4 className="font-semibold mb-2 text-lg">AI's Proposed Schedule:</h4>
                         {smartScheduleResult.overallSummary && (
                             <p className="text-sm italic mb-3 p-2 bg-background/50 rounded">{smartScheduleResult.overallSummary}</p>
@@ -344,7 +341,8 @@ export function AiFeaturesCard() {
                         )}
                       </div>
                     )}
-                  <DialogFooter className="pt-4 border-t">
+                  </div>
+                  <DialogFooter className="pt-4 border-t flex-shrink-0">
                     <Button onClick={handleGenerateSmartSchedule} disabled={isLoadingSmartSchedule} className="w-full sm:w-auto">
                       {isLoadingSmartSchedule ? "Generating..." : "Generate My Schedule"}
                     </Button>
@@ -358,31 +356,33 @@ export function AiFeaturesCard() {
                     <Sparkles className="mr-2 h-4 w-4" /> Suggest Tasks for Priorities
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
+                <DialogContent className="sm:max-w-[600px] flex flex-col max-h-[85vh]">
                   <DialogHeader>
                     <DialogTitle>Intelligent Task Suggestion</DialogTitle>
                     <DialogDescription>Provide context for the AI to suggest relevant tasks for your Top Priorities.</DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
-                    <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
-                      <Label htmlFor="userHistorySuggest" className="text-right pt-2 col-span-1">Your Habits</Label>
-                      <Textarea id="userHistorySuggest" value={userHistory} onChange={(e) => setUserHistory(e.target.value)} className="col-span-3" placeholder="e.g., Morning run, work on Project X" />
-                    </div>
-                    <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
-                      <Label htmlFor="currentScheduleTextSuggest" className="text-right pt-2 col-span-1">Today's Fixed Events</Label>
-                      <Textarea id="currentScheduleTextSuggest" value={currentScheduleText} onChange={(e) => setCurrentScheduleText(e.target.value)} className="col-span-3" placeholder="e.g., 10 AM Meeting, 1 PM Lunch" />
-                    </div>
-                    <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
-                      <Label htmlFor="prioritiesContextSuggest" className="text-right pt-2 col-span-1">Top Priorities Context</Label>
-                      <Textarea id="prioritiesContextSuggest" value={prioritiesContext} onChange={(e) => setPrioritiesContext(e.target.value)} className="col-span-3" placeholder="e.g., Finish report, Call John" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
-                      <Label htmlFor="weatherForecastSuggest" className="text-right col-span-1">Weather (Optional)</Label>
-                      <Input id="weatherForecastSuggest" value={weatherForecast} onChange={(e) => setWeatherForecast(e.target.value)} className="col-span-3" placeholder="e.g., Sunny, 22°C" />
+                  <div className="flex-grow overflow-y-auto py-4 pr-2 space-y-4">
+                    <div className="space-y-4"> {/* Input fields container */}
+                        <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                        <Label htmlFor="userHistorySuggest" className="text-right pt-2 col-span-1">Your Habits</Label>
+                        <Textarea id="userHistorySuggest" value={userHistory} onChange={(e) => setUserHistory(e.target.value)} className="col-span-3" placeholder="e.g., Morning run, work on Project X" />
+                        </div>
+                        <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                        <Label htmlFor="currentScheduleTextSuggest" className="text-right pt-2 col-span-1">Today's Fixed Events</Label>
+                        <Textarea id="currentScheduleTextSuggest" value={currentScheduleText} onChange={(e) => setCurrentScheduleText(e.target.value)} className="col-span-3" placeholder="e.g., 10 AM Meeting, 1 PM Lunch" />
+                        </div>
+                        <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                        <Label htmlFor="prioritiesContextSuggest" className="text-right pt-2 col-span-1">Top Priorities Context</Label>
+                        <Textarea id="prioritiesContextSuggest" value={prioritiesContext} onChange={(e) => setPrioritiesContext(e.target.value)} className="col-span-3" placeholder="e.g., Finish report, Call John" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                        <Label htmlFor="weatherForecastSuggest" className="text-right col-span-1">Weather (Optional)</Label>
+                        <Input id="weatherForecastSuggest" value={weatherForecast} onChange={(e) => setWeatherForecast(e.target.value)} className="col-span-3" placeholder="e.g., Sunny, 22°C" />
+                        </div>
                     </div>
                   
                     {suggestedTasksResult && (
-                      <div className="col-span-4 mt-4 p-3 bg-secondary/50 rounded-md max-h-[30vh] overflow-y-auto">
+                      <div className="mt-4 p-3 bg-secondary/50 rounded-md"> {/* Results container */}
                         <h4 className="font-semibold mb-2">Suggested Tasks for Priorities:</h4>
                         <ul className="list-disc list-inside space-y-2 text-sm">
                           {suggestedTasksResult.map((task, index) => (
@@ -397,7 +397,7 @@ export function AiFeaturesCard() {
                       </div>
                     )}
                   </div>
-                  <DialogFooter className="pt-4 border-t">
+                  <DialogFooter className="pt-4 border-t flex-shrink-0">
                     <Button onClick={handleSuggestTasks} disabled={isLoadingTasks}>
                       {isLoadingTasks ? "Suggesting..." : "Get Suggestions"}
                     </Button>
@@ -411,52 +411,54 @@ export function AiFeaturesCard() {
                     <CalendarPlus className="mr-2 h-4 w-4" /> AI Schedule Single Locked Time
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
+                <DialogContent className="sm:max-w-[600px] flex flex-col max-h-[85vh]">
                   <DialogHeader>
                     <DialogTitle>AI Schedule Single Locked Time</DialogTitle>
                     <DialogDescription>Let AI find the best slot for one fixed task/appointment.</DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
-                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
-                      <Label htmlFor="taskNameSchedule" className="text-right col-span-1">Task Name</Label>
-                      <Input id="taskNameSchedule" value={taskName} onChange={(e) => setTaskName(e.target.value)} className="col-span-3" placeholder="e.g., Doctor's appointment" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
-                      <Label htmlFor="durationMinutesSchedule" className="text-right col-span-1">Duration (min)</Label>
-                      <Input id="durationMinutesSchedule" type="number" value={durationMinutes} onChange={(e) => setDurationMinutes(parseInt(e.target.value))} className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
-                      <Label htmlFor="earliestStartTimeSchedule" className="text-right col-span-1">Earliest Start</Label>
-                      <Input id="earliestStartTimeSchedule" type="time" value={earliestStartTime} onChange={(e) => setEarliestStartTime(e.target.value)} className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
-                      <Label htmlFor="latestEndTimeSchedule" className="text-right col-span-1">Latest End</Label>
-                      <Input id="latestEndTimeSchedule" type="time" value={latestEndTime} onChange={(e) => setLatestEndTime(e.target.value)} className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
-                      <Label htmlFor="bufferBeforeSchedule" className="text-right col-span-1">Buffer Before (min)</Label>
-                      <Input id="bufferBeforeSchedule" type="number" value={bufferBefore} onChange={(e) => setBufferBefore(parseInt(e.target.value))} className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
-                      <Label htmlFor="bufferAfterSchedule" className="text-right col-span-1">Buffer After (min)</Label>
-                      <Input id="bufferAfterSchedule" type="number" value={bufferAfter} onChange={(e) => setBufferAfter(parseInt(e.target.value))} className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
-                      <Label htmlFor="otherObligationsSchedule" className="text-right pt-2 col-span-1">Other Obligations</Label>
-                      <Textarea id="otherObligationsSchedule" value={otherObligations} onChange={(e) => setOtherObligations(e.target.value)} className="col-span-3" placeholder="e.g., Travel time, existing meetings" />
+                  <div className="flex-grow overflow-y-auto py-4 pr-2 space-y-4">
+                    <div className="space-y-4"> {/* Input fields container */}
+                        <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                        <Label htmlFor="taskNameSchedule" className="text-right col-span-1">Task Name</Label>
+                        <Input id="taskNameSchedule" value={taskName} onChange={(e) => setTaskName(e.target.value)} className="col-span-3" placeholder="e.g., Doctor's appointment" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                        <Label htmlFor="durationMinutesSchedule" className="text-right col-span-1">Duration (min)</Label>
+                        <Input id="durationMinutesSchedule" type="number" value={durationMinutes} onChange={(e) => setDurationMinutes(parseInt(e.target.value))} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                        <Label htmlFor="earliestStartTimeSchedule" className="text-right col-span-1">Earliest Start</Label>
+                        <Input id="earliestStartTimeSchedule" type="time" value={earliestStartTime} onChange={(e) => setEarliestStartTime(e.target.value)} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                        <Label htmlFor="latestEndTimeSchedule" className="text-right col-span-1">Latest End</Label>
+                        <Input id="latestEndTimeSchedule" type="time" value={latestEndTime} onChange={(e) => setLatestEndTime(e.target.value)} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                        <Label htmlFor="bufferBeforeSchedule" className="text-right col-span-1">Buffer Before (min)</Label>
+                        <Input id="bufferBeforeSchedule" type="number" value={bufferBefore} onChange={(e) => setBufferBefore(parseInt(e.target.value))} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
+                        <Label htmlFor="bufferAfterSchedule" className="text-right col-span-1">Buffer After (min)</Label>
+                        <Input id="bufferAfterSchedule" type="number" value={bufferAfter} onChange={(e) => setBufferAfter(parseInt(e.target.value))} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
+                        <Label htmlFor="otherObligationsSchedule" className="text-right pt-2 col-span-1">Other Obligations</Label>
+                        <Textarea id="otherObligationsSchedule" value={otherObligations} onChange={(e) => setOtherObligations(e.target.value)} className="col-span-3" placeholder="e.g., Travel time, existing meetings" />
+                        </div>
                     </div>
                   
-                  {scheduleResult && (
-                    <div className="col-span-4 mt-4 p-3 bg-secondary/50 rounded-md">
-                      <h4 className="font-semibold">Suggested Start Time: {scheduleResult.suggestedStartTime}</h4>
-                      <p className="text-sm mt-1"><strong>Justification:</strong> {scheduleResult.justification}</p>
-                      <Button className="mt-2 w-full" onClick={handleAddScheduledTaskToTimeblock} disabled={isLoadingSchedule}>
-                        <CalendarPlus className="mr-2 h-4 w-4" /> Add to Schedule
-                      </Button>
-                    </div>
-                  )}
+                    {scheduleResult && (
+                        <div className="mt-4 p-3 bg-secondary/50 rounded-md"> {/* Results container */}
+                        <h4 className="font-semibold">Suggested Start Time: {scheduleResult.suggestedStartTime}</h4>
+                        <p className="text-sm mt-1"><strong>Justification:</strong> {scheduleResult.justification}</p>
+                        <Button className="mt-2 w-full" onClick={handleAddScheduledTaskToTimeblock} disabled={isLoadingSchedule}>
+                            <CalendarPlus className="mr-2 h-4 w-4" /> Add to Schedule
+                        </Button>
+                        </div>
+                    )}
                   </div>
-                  <DialogFooter className="pt-4 border-t">
+                  <DialogFooter className="pt-4 border-t flex-shrink-0">
                     <Button onClick={handleScheduleLockedTime} disabled={isLoadingSchedule}>
                       {isLoadingSchedule ? "Scheduling..." : "Find Slot"}
                     </Button>
@@ -470,6 +472,5 @@ export function AiFeaturesCard() {
     </Card>
   );
 }
-
 
     
