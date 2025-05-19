@@ -18,9 +18,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'DayFlow - Plan Your Day',
   description: 'Intelligent day planner to help you focus and achieve your goals.',
+  manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.svg?v=2', // Incremented cache-busting query
+    icon: '/favicon.svg?v=2',
+    apple: '/apple-touch-icon.png',
   },
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#64B5F6' }, // Corresponds to --primary HSL(207 88% 68%)
+    { media: '(prefers-color-scheme: dark)', color: '#0F172A' } // A common dark background, adjust if needed e.g., HSL(210 30% 10%)
+  ],
 };
 
 export default function RootLayout({
