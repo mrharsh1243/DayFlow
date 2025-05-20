@@ -18,77 +18,92 @@ const quotes = [
   "Your limitation—it's only your imagination."
 ];
 
+const DEFAULT_PRIORITY_PLACEHOLDER_ID = 'prio-default';
+const DEFAULT_PRIORITY_PLACEHOLDER: Priority = { id: DEFAULT_PRIORITY_PLACEHOLDER_ID, text: 'Define top goal for the day', completed: false };
+
+
 export function DailyOverviewCard() {
   const [currentDate, setCurrentDate] = useState('');
   const [currentDay, setCurrentDay] = useState('');
-  const [priorities, setPriorities] = useState<Priority[]>([]);
+  const [priorities, setPriorities] = useState<Priority[]>([DEFAULT_PRIORITY_PLACEHOLDER]);
   const [newPriority, setNewPriority] = useState('');
   const [quote, setQuote] = useState('');
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const loadPriorities = useCallback(() => {
-    const storedPriorities = localStorage.getItem('dayflow-priorities');
-    if (storedPriorities) {
-      try {
-        const parsedPriorities = JSON.parse(storedPriorities);
-        setPriorities(Array.isArray(parsedPriorities) ? parsedPriorities : []);
-      } catch (e) {
-        console.error("Failed to parse priorities from localStorage", e);
-        setPriorities([{ id: 'prio-default', text: 'Define top goal for the day', completed: false }]);
-      }
-    } else {
-      setPriorities([{ id: 'prio-default', text: 'Define top goal for the day', completed: false }]);
-    }
-  }, []);
-
+  // Load priorities from localStorage on mount and set up event listener
   useEffect(() => {
     const date = new Date();
     setCurrentDate(date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }));
     setCurrentDay(date.toLocaleDateString(undefined, { weekday: 'long' }));
     
-    // Client-side only quote generation
-    setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
+    if (typeof window !== 'undefined') {
+      setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
+    }
     
-    loadPriorities();
+    const loadStoredPriorities = () => {
+      const storedPriorities = localStorage.getItem('dayflow-priorities');
+      if (storedPriorities) {
+        try {
+          const parsedPriorities = JSON.parse(storedPriorities);
+          setPriorities(Array.isArray(parsedPriorities) && parsedPriorities.length > 0 ? parsedPriorities : [DEFAULT_PRIORITY_PLACEHOLDER]);
+        } catch (e) {
+          console.error("Failed to parse priorities from localStorage", e);
+          setPriorities([DEFAULT_PRIORITY_PLACEHOLDER]);
+        }
+      } else {
+        setPriorities([DEFAULT_PRIORITY_PLACEHOLDER]);
+      }
+    };
+
+    loadStoredPriorities();
+    setIsInitialLoad(false); // Mark initial load as complete
     
     const handleDataChange = () => {
-      setRefreshKey(prev => prev + 1);
+      loadStoredPriorities(); // Reload priorities on external data change
     };
     window.addEventListener('dayflow-datachanged', handleDataChange);
+    
     return () => {
       window.removeEventListener('dayflow-datachanged', handleDataChange);
     };
-  }, [loadPriorities]);
+  }, []);
 
+  // Save priorities to localStorage when they change (but not during initial load)
   useEffect(() => {
-    if (refreshKey > 0) { 
-        loadPriorities();
-    }
-  }, [refreshKey, loadPriorities]);
-
-  useEffect(() => {
-    if (refreshKey > 0 || (priorities.length > 0 && priorities[0].id !== 'prio-default') || priorities.length === 0 && localStorage.getItem('dayflow-priorities') !== null) {
+    if (!isInitialLoad) {
       localStorage.setItem('dayflow-priorities', JSON.stringify(priorities));
     }
-  }, [priorities, refreshKey]);
+  }, [priorities, isInitialLoad]);
 
   const addPriority = () => {
-    if (newPriority.trim() && priorities.length < 3) {
-      setPriorities([...priorities, { id: Date.now().toString(), text: newPriority, completed: false }]);
+    if (newPriority.trim()) {
+      setPriorities(prevPriorities => {
+        // Filter out the placeholder if it exists
+        const currentActualPriorities = prevPriorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID);
+        if (currentActualPriorities.length < 3) {
+          return [...currentActualPriorities, { id: Date.now().toString(), text: newPriority, completed: false }];
+        }
+        // If limit is reached, return the current actual priorities (or prevPriorities if you want to keep placeholder)
+        return prevPriorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID).length === prevPriorities.length ? prevPriorities : currentActualPriorities;
+      });
       setNewPriority('');
-      setRefreshKey(prev => prev + 1);
     }
   };
 
   const togglePriority = (id: string) => {
-    setPriorities(priorities.map(p => p.id === id ? { ...p, completed: !p.completed } : p));
-    setRefreshKey(prev => prev + 1);
+    setPriorities(priorities.map(p => p.id === id ? { ...p, completed: !p.completed } : p).filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID || p.completed === false));
   };
   
   const removePriority = (id: string) => {
-    setPriorities(priorities.filter(p => p.id !== id));
-    setRefreshKey(prev => prev + 1);
+    const updatedPriorities = priorities.filter(p => p.id !== id);
+    if (updatedPriorities.length === 0) {
+      setPriorities([DEFAULT_PRIORITY_PLACEHOLDER]); // If all removed, add back placeholder
+    } else {
+      setPriorities(updatedPriorities);
+    }
   };
+
+  const displayablePriorities = priorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID);
 
   return (
     <Card className="shadow-lg">
@@ -108,7 +123,7 @@ export function DailyOverviewCard() {
               <div>
                 <h3 className="font-semibold text-lg mb-2 flex items-center gap-2"><ListTodo className="text-accent" /> Top 3 Priorities</h3>
                 <ul className="space-y-2">
-                  {priorities.map(priority => (
+                  {displayablePriorities.map(priority => (
                     <li key={priority.id} className="flex items-center gap-2">
                       <Checkbox id={`prio-${priority.id}`} checked={priority.completed} onCheckedChange={() => togglePriority(priority.id)} />
                       <label htmlFor={`prio-${priority.id}`} className={`flex-1 ${priority.completed ? 'line-through text-muted-foreground' : ''}`}>{priority.text}</label>
@@ -118,7 +133,7 @@ export function DailyOverviewCard() {
                     </li>
                   ))}
                 </ul>
-                {priorities.length < 3 && (
+                {displayablePriorities.length < 3 && (
                   <div className="mt-2 flex gap-2">
                     <Input 
                       value={newPriority} 
@@ -132,13 +147,13 @@ export function DailyOverviewCard() {
                     </Button>
                   </div>
                 )}
-                {priorities.length === 0 && (
+                {displayablePriorities.length === 0 && (
                   <p className="text-sm text-muted-foreground italic text-center py-2">No priorities set. Add up to 3!</p>
                 )}
               </div>
               <div>
                 <h3 className="font-semibold text-lg mb-2 flex items-center gap-2"><MessageSquareQuote className="text-accent" /> Motivation</h3>
-                <p className="text-sm italic text-muted-foreground p-3 bg-secondary/30 rounded-md">{quote}</p>
+                <p className="text-sm italic text-muted-foreground p-3 bg-secondary/30 rounded-md">{quote || "Loading quote..."}</p>
               </div>
             </CardContent>
           </AccordionContent>
