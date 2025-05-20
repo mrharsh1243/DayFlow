@@ -73,7 +73,7 @@ export function PomodoroTimerCard() {
 
   const toggleTimer = () => {
     if (!isRunning && timeLeft > 0) { // Play sound only when starting the timer
-        new Audio('/completion-sound.mp3').play().catch(e => console.error("Error playing sound:", e));
+        new Audio('/Start-timer.mp3').play().catch(e => console.error("Error playing start sound:", e));
     }
     setIsRunning(!isRunning);
   };
