@@ -72,6 +72,9 @@ export function PomodoroTimerCard() {
   }, [isRunning, timeLeft, handleTimerEnd]);
 
   const toggleTimer = () => {
+    if (!isRunning && timeLeft > 0) { // Play sound only when starting the timer
+        new Audio('/completion-sound.mp3').play().catch(e => console.error("Error playing sound:", e));
+    }
     setIsRunning(!isRunning);
   };
 
@@ -96,15 +99,9 @@ export function PomodoroTimerCard() {
     } else {
       setTimeLeft(LONG_BREAK_DURATION);
     }
-    // Reset pomodoros if switching to work manually after a break cycle might have been interrupted
-    if (mode === 'work' && (currentMode === 'shortBreak' || currentMode === 'longBreak')) {
-      // This logic is a bit tricky. If user manually switches to work, we assume a fresh start.
-      // The pomodorosCompleted count persists for the cycle.
-    }
   };
   
   useEffect(() => {
-    // Update document title with time left
     if (isRunning) {
       document.title = `${formatTime(timeLeft)} - ${currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} | DayFlow`;
     } else {
@@ -113,7 +110,6 @@ export function PomodoroTimerCard() {
          document.title = defaultTitle;
       }
     }
-    // Cleanup on unmount
     return () => {
       const defaultTitle = "DayFlow - Plan Your Day";
       if (document.title !== defaultTitle) {
@@ -180,3 +176,4 @@ export function PomodoroTimerCard() {
     </Card>
   );
 }
+
