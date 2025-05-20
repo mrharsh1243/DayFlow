@@ -30,7 +30,21 @@ export function DailyOverviewCard() {
   const [quote, setQuote] = useState('');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Load priorities from localStorage on mount and set up event listener
+  const loadPriorities = useCallback(() => {
+    const storedPriorities = localStorage.getItem('dayflow-priorities');
+    if (storedPriorities) {
+      try {
+        const parsedPriorities = JSON.parse(storedPriorities);
+        setPriorities(Array.isArray(parsedPriorities) && parsedPriorities.length > 0 ? parsedPriorities : [DEFAULT_PRIORITY_PLACEHOLDER]);
+      } catch (e) {
+        console.error("Failed to parse priorities from localStorage", e);
+        setPriorities([DEFAULT_PRIORITY_PLACEHOLDER]);
+      }
+    } else {
+      setPriorities([DEFAULT_PRIORITY_PLACEHOLDER]);
+    }
+  }, []);
+  
   useEffect(() => {
     const date = new Date();
     setCurrentDate(date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }));
@@ -40,35 +54,19 @@ export function DailyOverviewCard() {
       setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
     }
     
-    const loadStoredPriorities = () => {
-      const storedPriorities = localStorage.getItem('dayflow-priorities');
-      if (storedPriorities) {
-        try {
-          const parsedPriorities = JSON.parse(storedPriorities);
-          setPriorities(Array.isArray(parsedPriorities) && parsedPriorities.length > 0 ? parsedPriorities : [DEFAULT_PRIORITY_PLACEHOLDER]);
-        } catch (e) {
-          console.error("Failed to parse priorities from localStorage", e);
-          setPriorities([DEFAULT_PRIORITY_PLACEHOLDER]);
-        }
-      } else {
-        setPriorities([DEFAULT_PRIORITY_PLACEHOLDER]);
-      }
-    };
-
-    loadStoredPriorities();
-    setIsInitialLoad(false); // Mark initial load as complete
+    loadPriorities();
+    setIsInitialLoad(false);
     
     const handleDataChange = () => {
-      loadStoredPriorities(); // Reload priorities on external data change
+      loadPriorities();
     };
     window.addEventListener('dayflow-datachanged', handleDataChange);
     
     return () => {
       window.removeEventListener('dayflow-datachanged', handleDataChange);
     };
-  }, []);
+  }, [loadPriorities]);
 
-  // Save priorities to localStorage when they change (but not during initial load)
   useEffect(() => {
     if (!isInitialLoad) {
       localStorage.setItem('dayflow-priorities', JSON.stringify(priorities));
@@ -78,26 +76,44 @@ export function DailyOverviewCard() {
   const addPriority = () => {
     if (newPriority.trim()) {
       setPriorities(prevPriorities => {
-        // Filter out the placeholder if it exists
         const currentActualPriorities = prevPriorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID);
         if (currentActualPriorities.length < 3) {
           return [...currentActualPriorities, { id: Date.now().toString(), text: newPriority, completed: false }];
         }
-        // If limit is reached, return the current actual priorities (or prevPriorities if you want to keep placeholder)
-        return prevPriorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID).length === prevPriorities.length ? prevPriorities : currentActualPriorities;
+        return prevPriorities; // Return original if limit reached and placeholder was already filtered or not present
       });
       setNewPriority('');
     }
   };
 
   const togglePriority = (id: string) => {
-    setPriorities(priorities.map(p => p.id === id ? { ...p, completed: !p.completed } : p).filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID || p.completed === false));
+    setPriorities(prevPriorities => {
+        const updatedPriorities = prevPriorities.map(p => {
+            if (p.id === id) {
+                const wasCompleted = p.completed;
+                const newP = { ...p, completed: !p.completed };
+                if (!wasCompleted && newP.completed) {
+                    new Audio('/completion-sound.mp3').play().catch(e => console.error("Error playing sound:", e));
+                }
+                return newP;
+            }
+            return p;
+        });
+
+        // Handle placeholder logic correctly
+        const actualPriorities = updatedPriorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID);
+        if (actualPriorities.length === 0 && !actualPriorities.some(p => p.id === DEFAULT_PRIORITY_PLACEHOLDER_ID && !p.completed)) {
+             // If all actual priorities are removed or completed, and placeholder is not there or completed, show placeholder.
+            return [DEFAULT_PRIORITY_PLACEHOLDER];
+        }
+        return updatedPriorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID || !p.completed);
+    });
   };
   
   const removePriority = (id: string) => {
     const updatedPriorities = priorities.filter(p => p.id !== id);
-    if (updatedPriorities.length === 0) {
-      setPriorities([DEFAULT_PRIORITY_PLACEHOLDER]); // If all removed, add back placeholder
+    if (updatedPriorities.length === 0 || (updatedPriorities.length === 1 && updatedPriorities[0].id === DEFAULT_PRIORITY_PLACEHOLDER_ID) ) {
+      setPriorities([DEFAULT_PRIORITY_PLACEHOLDER]); 
     } else {
       setPriorities(updatedPriorities);
     }
@@ -162,3 +178,4 @@ export function DailyOverviewCard() {
     </Card>
   );
 }
+

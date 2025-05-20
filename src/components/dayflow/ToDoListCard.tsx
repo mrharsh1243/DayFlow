@@ -97,12 +97,20 @@ export function ToDoListCard() {
   };
 
   const toggleTask = (category: TaskCategory, taskId: string) => {
-    setTasks(prevTasks => ({
-      ...prevTasks,
-      [category]: prevTasks[category].map(task =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
-    }));
+    setTasks(prevTasks => {
+        const newTasksForCategory = prevTasks[category].map(task => {
+            if (task.id === taskId) {
+                const wasCompleted = task.completed;
+                const updatedTask = { ...task, completed: !task.completed };
+                if (!wasCompleted && updatedTask.completed) {
+                    new Audio('/completion-sound.mp3').play().catch(e => console.error("Error playing sound:", e));
+                }
+                return updatedTask;
+            }
+            return task;
+        });
+        return { ...prevTasks, [category]: newTasksForCategory };
+    });
   };
 
   const removeTask = (category: TaskCategory, taskId: string) => {
@@ -180,3 +188,4 @@ export function ToDoListCard() {
     </Card>
   );
 }
+

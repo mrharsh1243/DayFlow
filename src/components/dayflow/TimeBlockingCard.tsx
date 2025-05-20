@@ -97,14 +97,22 @@ export function TimeBlockingCard() {
     toast({ title: "Task Removed", variant: "destructive" });
   };
 
-  const toggleTaskCompletion = (timeSlotId: string, taskId: string) => {
-    setTasks(prevTasks => ({
-      ...prevTasks,
-      [timeSlotId]: (prevTasks[timeSlotId] || []).map(task => 
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
-    }));
-  };
+  const toggleTaskCompletion = useCallback((timeSlotId: string, taskId: string) => {
+    setTasks(prevTasks => {
+      const newTasksForSlot = (prevTasks[timeSlotId] || []).map(task => {
+        if (task.id === taskId) {
+          const wasCompleted = task.completed;
+          const updatedTask = { ...task, completed: !task.completed };
+          if (!wasCompleted && updatedTask.completed && !updatedTask.isLocked) {
+            new Audio('/completion-sound.mp3').play().catch(e => console.error("Error playing sound:", e));
+          }
+          return updatedTask;
+        }
+        return task;
+      });
+      return { ...prevTasks, [timeSlotId]: newTasksForSlot };
+    });
+  }, []);
 
   const startEditing = (task: ScheduledTask) => {
     setEditingTask(task);

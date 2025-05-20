@@ -57,19 +57,39 @@ export function GoalsHabitsCard() {
   }, [goals]);
 
   const toggleHabit = (id: string) => {
-    setHabits(habits.map(h => h.id === id ? { ...h, completed: !h.completed } : h));
+    setHabits(habits.map(h => {
+      if (h.id === id) {
+        const wasCompleted = h.completed;
+        const updatedHabit = { ...h, completed: !h.completed };
+        if (!wasCompleted && updatedHabit.completed) {
+          new Audio('/completion-sound.mp3').play().catch(e => console.error("Error playing sound:", e));
+        }
+        return updatedHabit;
+      }
+      return h;
+    }));
   };
 
   const addGoal = () => {
     if (newGoal.trim()) {
-      setGoals([...goals, { id: Date.now().toString(), text: newGoal }]);
+      setGoals([...goals, { id: Date.now().toString(), text: newGoal, achieved: false }]);
       setNewGoal('');
       toast({title: "Goal Added", description: `"${newGoal}" added.`});
     }
   };
   
   const toggleGoal = (id: string) => {
-    setGoals(goals.map(g => g.id === id ? { ...g, achieved: !g.achieved } : g));
+    setGoals(goals.map(g => {
+      if (g.id === id) {
+        const wasAchieved = g.achieved;
+        const updatedGoal = { ...g, achieved: !g.achieved };
+        if (!wasAchieved && updatedGoal.achieved) {
+          new Audio('/completion-sound.mp3').play().catch(e => console.error("Error playing sound:", e));
+        }
+        return updatedGoal;
+      }
+      return g;
+    }));
   };
 
   const removeGoal = (id: string) => {
@@ -142,3 +162,4 @@ export function GoalsHabitsCard() {
     </Card>
   );
 }
+
