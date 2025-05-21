@@ -169,7 +169,7 @@
     --sidebar-ring: 50 100% 55%;
   }
 
-  .soft {
+  .blush { /* Renamed from .soft to .blush */
     --background: 350 100% 88%; /* Blush Pink */
     --foreground: 350 25% 35%; /* Dark Muted Rose/Brown */
 

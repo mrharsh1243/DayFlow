@@ -41,7 +41,7 @@ export function Header() {
   else if (resolvedTheme === 'dark') TriggerIcon = Moon;
   else if (resolvedTheme === 'premium') TriggerIcon = Gem;
   else if (resolvedTheme === 'royal') TriggerIcon = Crown;
-  else if (resolvedTheme === 'soft') TriggerIcon = Heart;
+  else if (resolvedTheme === 'blush') TriggerIcon = Heart;
 
 
   return (
@@ -76,9 +76,9 @@ export function Header() {
               <Crown className="mr-2 h-4 w-4" />
               <span>Royal</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme('soft')}>
+            <DropdownMenuItem onClick={() => setTheme('blush')}>
               <Heart className="mr-2 h-4 w-4" />
-              <span>Soft</span>
+              <span>Blush</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setTheme('system')}>
