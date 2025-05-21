@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Clock, PlusCircle, Trash2, Lock, Edit3 } from "lucide-react";
+import { Clock, PlusCircle, Trash2, Lock, Edit3, AlertTriangle } from "lucide-react"; // Added AlertTriangle
 import type { Task, TimeSlot as TimeSlotType } from '@/types/dayflow'; 
 import { TIME_SLOTS } from '@/types/dayflow';
 import { useToast } from "@/hooks/use-toast";
@@ -33,7 +33,7 @@ export function TimeBlockingCard() {
   const [editingTask, setEditingTask] = useState<ScheduledTask | null>(null);
   const [editingText, setEditingText] = useState('');
   const { toast } = useToast();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0); // Used to trigger re-renders on data change
 
   const loadTasks = useCallback(() => {
     const storedTasks = localStorage.getItem('dayflow-timeblock-tasks');
@@ -53,21 +53,25 @@ export function TimeBlockingCard() {
     loadTasks();
 
     const handleDataChange = () => {
+      // Increment refreshKey to force a re-render and data reload
       setRefreshKey(prev => prev + 1);
     };
     window.addEventListener('dayflow-datachanged', handleDataChange);
     return () => {
       window.removeEventListener('dayflow-datachanged', handleDataChange);
     };
-  }, [loadTasks]); 
+  }, [loadTasks]); // loadTasks is stable due to useCallback
 
   useEffect(() => {
-    if (refreshKey > 0) {
+    // This effect runs when refreshKey changes, ensuring tasks are reloaded
+    if (refreshKey > 0) { // Avoid reloading on initial mount if loadTasks already ran
         loadTasks();
     }
   }, [refreshKey, loadTasks]); 
 
   useEffect(() => {
+    // Save tasks to localStorage only if tasks have been initialized and changed
+    // refreshKey check prevents writing empty tasks on initial load if localStorage was empty.
     if (Object.keys(tasks).length > 0 || refreshKey > 0) { 
         localStorage.setItem('dayflow-timeblock-tasks', JSON.stringify(tasks));
     }
@@ -211,6 +215,20 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
   const [newTaskText, setNewTaskText] = useState('');
   const [isLockedSlot, setIsLockedSlot] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  let isSlotPast = false;
+  if (isClient) {
+    const now = new Date();
+    const currentDay = now.toDateString();
+    const [slotHourStr, slotMinuteStr] = slot.isoTime.split(':');
+    const slotDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(slotHourStr), parseInt(slotMinuteStr));
+    isSlotPast = slotDateTime < now && slotDateTime.toDateString() === currentDay;
+  }
 
 
   const handleAddTask = () => {
@@ -265,23 +283,27 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
       </div>
       {tasks.length > 0 ? (
         <ul className="space-y-1.5 text-sm"> 
-          {tasks.map(task => (
-            <li key={task.id} className={`flex items-center gap-2 p-1.5 rounded ${task.isLocked ? 'bg-primary/10' : 'bg-muted/40'}`}> 
-              <Checkbox id={`task-${slot.id}-${task.id}`} checked={task.completed} onCheckedChange={() => onToggleTask(task.id)} disabled={task.isLocked} aria-label={`Mark task ${task.text} as ${task.completed ? 'incomplete' : 'complete'}`}/>
-              <span className={`flex-1 ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-                {task.isLocked && <Lock className="inline h-3.5 w-3.5 mr-1.5 text-accent" />} 
-                {task.text}
-              </span>
-              {!task.isLocked && (
-                 <Button variant="ghost" size="icon" onClick={() => onEditTask(task)} className="h-7 w-7" aria-label={`Edit task ${task.text}`}> 
-                    <Edit3 className="h-4 w-4 text-primary/80 hover:text-primary" />
-                  </Button>
-              )}
-              <Button variant="ghost" size="icon" onClick={() => onRemoveTask(task.id)} className="h-7 w-7" aria-label={`Remove task ${task.text}`}> 
-                <Trash2 className="h-4 w-4 text-destructive/80 hover:text-destructive" />
-              </Button>
-            </li>
-          ))}
+          {tasks.map(task => {
+            const isOverdue = isClient && isSlotPast && !task.completed && !task.isLocked;
+            return (
+              <li key={task.id} className={`flex items-center gap-2 p-1.5 rounded ${task.isLocked ? 'bg-primary/10' : 'bg-muted/40'} ${isOverdue ? 'opacity-75' : ''}`}> 
+                <Checkbox id={`task-${slot.id}-${task.id}`} checked={task.completed} onCheckedChange={() => onToggleTask(task.id)} disabled={task.isLocked} aria-label={`Mark task ${task.text} as ${task.completed ? 'incomplete' : 'complete'}`}/>
+                <span className={`flex-1 ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'} ${isOverdue ? 'text-destructive' : ''}`}>
+                  {isOverdue && <AlertTriangle className="inline h-3.5 w-3.5 mr-1.5 text-destructive" />}
+                  {task.isLocked && <Lock className="inline h-3.5 w-3.5 mr-1.5 text-accent" />} 
+                  {task.text}
+                </span>
+                {!task.isLocked && (
+                   <Button variant="ghost" size="icon" onClick={() => onEditTask(task)} className="h-7 w-7" aria-label={`Edit task ${task.text}`}> 
+                      <Edit3 className="h-4 w-4 text-primary/80 hover:text-primary" />
+                    </Button>
+                )}
+                <Button variant="ghost" size="icon" onClick={() => onRemoveTask(task.id)} className="h-7 w-7" aria-label={`Remove task ${task.text}`}> 
+                  <Trash2 className="h-4 w-4 text-destructive/80 hover:text-destructive" />
+                </Button>
+              </li>
+            );
+          })}
         </ul>
       ) : (
         <p className="text-xs text-muted-foreground italic px-1 py-2">No tasks for this slot.</p> 
@@ -289,5 +311,4 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
     </div>
   );
 }
-
     
