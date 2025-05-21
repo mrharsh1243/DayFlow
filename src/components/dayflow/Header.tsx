@@ -1,7 +1,7 @@
 
 "use client";
 
-import { LayoutGrid, Moon, Sun, Palette, Gem, Crown, Tv } from 'lucide-react';
+import { LayoutGrid, Moon, Sun, Palette, Gem, Crown, Tv, Heart } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,6 +41,7 @@ export function Header() {
   else if (resolvedTheme === 'dark') TriggerIcon = Moon;
   else if (resolvedTheme === 'premium') TriggerIcon = Gem;
   else if (resolvedTheme === 'royal') TriggerIcon = Crown;
+  else if (resolvedTheme === 'soft') TriggerIcon = Heart;
 
 
   return (
@@ -74,6 +75,10 @@ export function Header() {
             <DropdownMenuItem onClick={() => setTheme('royal')}>
               <Crown className="mr-2 h-4 w-4" />
               <span>Royal</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme('soft')}>
+              <Heart className="mr-2 h-4 w-4" />
+              <span>Soft</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setTheme('system')}>
