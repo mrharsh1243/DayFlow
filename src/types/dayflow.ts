@@ -1,8 +1,11 @@
+
+import type { LucideIcon } from 'lucide-react';
+
 export interface Task {
   id: string;
   text: string;
   completed: boolean;
-  category?: TaskCategory;
+  category?: TaskCategoryName;
   startTime?: string; // e.g., "09:00"
   endTime?: string; // e.g., "10:00"
   isLocked?: boolean; // For manually locked time slots
@@ -35,8 +38,13 @@ export interface ReflectionItem {
 
 export type Mood = 'Happy' | 'Neutral' | 'Productive' | 'Stressed' | 'Tired' | '';
 
-// Removed 'AI Suggested'
-export type TaskCategory = 'Work' | 'Personal' | 'Health/Fitness' | 'Errands';
+export type TaskCategoryName = 'Work' | 'Personal' | 'Health/Fitness' | 'Errands';
+
+export interface TaskCategory {
+  name: TaskCategoryName;
+  icon: LucideIcon; // Directly using LucideIcon type
+}
+
 
 export interface Priority {
   id: string;
@@ -62,3 +70,18 @@ export const TIME_SLOTS = Array.from({ length: (22 - 6) + 1 }, (_, i) => {
     isoTime: `${formattedHour}:00`
   };
 });
+
+// Moved from ToDoListCard.tsx for global access
+// Ensure Lucide icons are imported where these categories are used if icons are directly rendered
+// For now, we will import them in the components that use this.
+// If direct LucideIcon components are stored here, it can complicate serialization or type usage across server/client.
+// It's often better to store a string key and map to the component in the UI, but for direct use:
+// import { Briefcase, User, HeartPulse, ShoppingCart } from "lucide-react";
+// export const TODO_CATEGORIES: TaskCategory[] = [
+//   { name: 'Work', icon: Briefcase },
+//   { name: 'Personal', icon: User },
+//   { name: 'Health/Fitness', icon: HeartPulse },
+//   { name: 'Errands', icon: ShoppingCart },
+// ];
+// Simpler approach for now, actual icons will be imported in components that render them.
+export const TODO_CATEGORY_NAMES: TaskCategoryName[] = ['Work', 'Personal', 'Health/Fitness', 'Errands'];
