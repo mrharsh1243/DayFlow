@@ -6,31 +6,26 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CalendarDays, ListTodo, MessageSquareQuote, PlusCircle, Trash2 } from "lucide-react";
+import { CalendarDays, ListTodo, MessageSquareQuote, PlusCircle, Trash2, Zap } from "lucide-react";
 import type { Priority } from '@/types/dayflow'; 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-
-const quotes = [
-  "The secret of getting ahead is getting started.",
-  "The best way to predict the future is to create it.",
-  "Don't watch the clock; do what it does. Keep going.",
-  "The only way to do great work is to love what you do.",
-  "Your limitation—it's only your imagination."
-];
+import { getDailyQuote } from '@/ai/flows/get-daily-quote-flow';
+import { useToast } from '@/hooks/use-toast';
 
 const DEFAULT_PRIORITY_PLACEHOLDER_ID = 'prio-default';
 const DEFAULT_PRIORITY_PLACEHOLDER: Priority = { id: DEFAULT_PRIORITY_PLACEHOLDER_ID, text: 'Define top goal for the day', completed: false };
 
-
 export function DailyOverviewCard() {
   const [currentDate, setCurrentDate] = useState('');
   const [currentDay, setCurrentDay] = useState('');
-  const [priorities, setPriorities] = useState<Priority[]>([DEFAULT_PRIORITY_PLACEHOLDER]);
+  const [priorities, setPriorities] = useState<Priority[]>([]);
   const [newPriority, setNewPriority] = useState('');
-  const [quote, setQuote] = useState('');
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [quote, setQuote] = useState<string | null>(null);
+  const [isQuoteLoading, setIsQuoteLoading] = useState(true);
+  const [isInitialPriorityLoad, setIsInitialPriorityLoad] = useState(true);
+  const { toast } = useToast();
 
-  const loadPriorities = useCallback(() => {
+  const loadPrioritiesFromStorage = useCallback(() => {
     const storedPriorities = localStorage.getItem('dayflow-priorities');
     if (storedPriorities) {
       try {
@@ -43,35 +38,65 @@ export function DailyOverviewCard() {
     } else {
       setPriorities([DEFAULT_PRIORITY_PLACEHOLDER]);
     }
+    setIsInitialPriorityLoad(false);
   }, []);
-  
+
   useEffect(() => {
     const date = new Date();
     setCurrentDate(date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }));
     setCurrentDay(date.toLocaleDateString(undefined, { weekday: 'long' }));
     
-    if (typeof window !== 'undefined') {
-      setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
-    }
-    
-    loadPriorities();
-    setIsInitialLoad(false);
+    loadPrioritiesFromStorage();
     
     const handleDataChange = () => {
-      loadPriorities();
+      loadPrioritiesFromStorage();
     };
     window.addEventListener('dayflow-datachanged', handleDataChange);
+    
+    // Load or fetch daily quote
+    const todayDateString = new Date().toISOString().split('T')[0];
+    const storedQuote = localStorage.getItem('dayflow-dailyQuote');
+    const storedQuoteDate = localStorage.getItem('dayflow-dailyQuoteDate');
+
+    if (storedQuote && storedQuoteDate === todayDateString) {
+      setQuote(storedQuote);
+      setIsQuoteLoading(false);
+    } else {
+      setIsQuoteLoading(true);
+      getDailyQuote()
+        .then(result => {
+          if (result && result.quote) {
+            setQuote(result.quote);
+            localStorage.setItem('dayflow-dailyQuote', result.quote);
+            localStorage.setItem('dayflow-dailyQuoteDate', todayDateString);
+          } else {
+            setQuote("Keep shining, the world needs your light."); // Fallback quote
+          }
+        })
+        .catch(error => {
+          console.error("Error fetching daily quote:", error);
+          setQuote("The best way to predict the future is to create it."); // Fallback on error
+          toast({
+            title: "AI Quote Error",
+            description: "Could not fetch a new quote. Showing a default one.",
+            variant: "destructive"
+          });
+        })
+        .finally(() => {
+          setIsQuoteLoading(false);
+        });
+    }
     
     return () => {
       window.removeEventListener('dayflow-datachanged', handleDataChange);
     };
-  }, [loadPriorities]);
+  }, [loadPrioritiesFromStorage, toast]);
 
   useEffect(() => {
-    if (!isInitialLoad) {
+    if (!isInitialPriorityLoad) {
       localStorage.setItem('dayflow-priorities', JSON.stringify(priorities));
     }
-  }, [priorities, isInitialLoad]);
+  }, [priorities, isInitialPriorityLoad]);
 
   const addPriority = () => {
     if (newPriority.trim()) {
@@ -80,7 +105,11 @@ export function DailyOverviewCard() {
         if (currentActualPriorities.length < 3) {
           return [...currentActualPriorities, { id: Date.now().toString(), text: newPriority, completed: false }];
         }
-        return prevPriorities; // Return original if limit reached and placeholder was already filtered or not present
+        // Optionally, toast if max priorities reached
+        if(currentActualPriorities.length >= 3) {
+            toast({ title: "Priorities Full", description: "Maximum of 3 priorities allowed."});
+        }
+        return prevPriorities.some(p => p.id === DEFAULT_PRIORITY_PLACEHOLDER_ID) ? prevPriorities : [DEFAULT_PRIORITY_PLACEHOLDER, ...currentActualPriorities].slice(0,4);
       });
       setNewPriority('');
     }
@@ -100,23 +129,26 @@ export function DailyOverviewCard() {
             return p;
         });
 
-        // Handle placeholder logic correctly
         const actualPriorities = updatedPriorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID);
-        if (actualPriorities.length === 0 && !actualPriorities.some(p => p.id === DEFAULT_PRIORITY_PLACEHOLDER_ID && !p.completed)) {
-             // If all actual priorities are removed or completed, and placeholder is not there or completed, show placeholder.
+        if (actualPriorities.length === 0 && !updatedPriorities.find(p => p.id === DEFAULT_PRIORITY_PLACEHOLDER_ID && !p.completed)) {
             return [DEFAULT_PRIORITY_PLACEHOLDER];
         }
-        return updatedPriorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID || !p.completed);
+        
+        if (actualPriorities.length > 0 && updatedPriorities.some(p => p.id === DEFAULT_PRIORITY_PLACEHOLDER_ID)) {
+            return actualPriorities;
+        }
+        return updatedPriorities;
     });
   };
   
   const removePriority = (id: string) => {
-    const updatedPriorities = priorities.filter(p => p.id !== id);
-    if (updatedPriorities.length === 0 || (updatedPriorities.length === 1 && updatedPriorities[0].id === DEFAULT_PRIORITY_PLACEHOLDER_ID) ) {
-      setPriorities([DEFAULT_PRIORITY_PLACEHOLDER]); 
-    } else {
-      setPriorities(updatedPriorities);
-    }
+    setPriorities(prevPriorities => {
+        const updatedPriorities = prevPriorities.filter(p => p.id !== id);
+        if (updatedPriorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID).length === 0) {
+          return [DEFAULT_PRIORITY_PLACEHOLDER];
+        }
+        return updatedPriorities;
+    });
   };
 
   const displayablePriorities = priorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID);
@@ -163,13 +195,18 @@ export function DailyOverviewCard() {
                     </Button>
                   </div>
                 )}
-                {displayablePriorities.length === 0 && (
+                {displayablePriorities.length === 0 && priorities.some(p => p.id === DEFAULT_PRIORITY_PLACEHOLDER_ID) &&(
                   <p className="text-sm text-muted-foreground italic text-center py-2">No priorities set. Add up to 3!</p>
                 )}
               </div>
               <div>
-                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2"><MessageSquareQuote className="text-accent" /> Motivation</h3>
-                <p className="text-sm italic text-muted-foreground p-3 bg-secondary/30 rounded-md">{quote || "Loading quote..."}</p>
+                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                  {isQuoteLoading ? <Zap className="text-accent animate-pulse" /> : <MessageSquareQuote className="text-accent" />}
+                  Motivation
+                </h3>
+                <p className="text-sm italic text-muted-foreground p-3 bg-secondary/30 rounded-md min-h-[40px]">
+                  {isQuoteLoading ? "Fetching inspiring words..." : quote || " "}
+                </p>
               </div>
             </CardContent>
           </AccordionContent>
@@ -178,4 +215,3 @@ export function DailyOverviewCard() {
     </Card>
   );
 }
-
