@@ -25,6 +25,12 @@ export function DailyOverviewCard() {
   const [isInitialPriorityLoad, setIsInitialPriorityLoad] = useState(true);
   const { toast } = useToast();
 
+  useEffect(() => {
+    const date = new Date();
+    setCurrentDate(date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }));
+    setCurrentDay(date.toLocaleDateString(undefined, { weekday: 'long' }));
+  }, []);
+
   const loadPrioritiesFromStorage = useCallback(() => {
     const storedPriorities = localStorage.getItem('dayflow-priorities');
     if (storedPriorities) {
@@ -41,11 +47,8 @@ export function DailyOverviewCard() {
     setIsInitialPriorityLoad(false);
   }, []);
 
+  // Effect for loading priorities and listening to changes
   useEffect(() => {
-    const date = new Date();
-    setCurrentDate(date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }));
-    setCurrentDay(date.toLocaleDateString(undefined, { weekday: 'long' }));
-    
     loadPrioritiesFromStorage();
     
     const handleDataChange = () => {
@@ -53,63 +56,80 @@ export function DailyOverviewCard() {
     };
     window.addEventListener('dayflow-datachanged', handleDataChange);
     
-    // Load or fetch daily quote
-    const todayDateString = new Date().toISOString().split('T')[0];
-    const storedQuote = localStorage.getItem('dayflow-dailyQuote');
-    const storedQuoteDate = localStorage.getItem('dayflow-dailyQuoteDate');
-
-    if (storedQuote && storedQuoteDate === todayDateString) {
-      setQuote(storedQuote);
-      setIsQuoteLoading(false);
-    } else {
-      setIsQuoteLoading(true);
-      getDailyQuote()
-        .then(result => {
-          if (result && result.quote) {
-            setQuote(result.quote);
-            localStorage.setItem('dayflow-dailyQuote', result.quote);
-            localStorage.setItem('dayflow-dailyQuoteDate', todayDateString);
-          } else {
-            setQuote("Keep shining, the world needs your light."); // Fallback quote
-          }
-        })
-        .catch(error => {
-          console.error("Error fetching daily quote:", error);
-          setQuote("The best way to predict the future is to create it."); // Fallback on error
-          toast({
-            title: "AI Quote Error",
-            description: "Could not fetch a new quote. Showing a default one.",
-            variant: "destructive"
-          });
-        })
-        .finally(() => {
-          setIsQuoteLoading(false);
-        });
-    }
-    
     return () => {
       window.removeEventListener('dayflow-datachanged', handleDataChange);
     };
-  }, [loadPrioritiesFromStorage, toast]);
+  }, [loadPrioritiesFromStorage]);
 
+  // Effect for saving priorities
   useEffect(() => {
     if (!isInitialPriorityLoad) {
       localStorage.setItem('dayflow-priorities', JSON.stringify(priorities));
     }
   }, [priorities, isInitialPriorityLoad]);
 
+  // Effect for fetching or loading daily quote
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchOrLoadQuote = async () => {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const lsQuote = localStorage.getItem('dayflow-dailyQuote');
+      const lsQuoteDate = localStorage.getItem('dayflow-dailyQuoteDate');
+
+      if (lsQuote && lsQuoteDate === todayStr) {
+        if (isMounted) {
+          setQuote(lsQuote);
+          setIsQuoteLoading(false);
+        }
+      } else {
+        if (isMounted) {
+          setIsQuoteLoading(true);
+        }
+        try {
+          const result = await getDailyQuote(); // Flow has its own fallback
+          if (isMounted) {
+            setQuote(result.quote);
+            localStorage.setItem('dayflow-dailyQuote', result.quote);
+            localStorage.setItem('dayflow-dailyQuoteDate', todayStr);
+          }
+        } catch (error) {
+          console.error("Error fetching daily quote:", error);
+          if (isMounted) {
+            const fallbackOnError = "The best way to predict the future is to create it.";
+            setQuote(fallbackOnError);
+            localStorage.setItem('dayflow-dailyQuote', fallbackOnError);
+            localStorage.setItem('dayflow-dailyQuoteDate', todayStr); // Save fallback with date to prevent re-fetch
+            toast({
+              title: "AI Quote Error",
+              description: "Could not fetch a new quote. Showing a default one.",
+              variant: "destructive",
+            });
+          }
+        } finally {
+          if (isMounted) {
+            setIsQuoteLoading(false);
+          }
+        }
+      }
+    };
+
+    fetchOrLoadQuote();
+
+    return () => {
+      isMounted = false; // Cleanup to prevent state updates on unmounted component
+    };
+  }, [toast]); // toast is a stable function from useToast, so this effect effectively runs once on mount.
+
   const addPriority = () => {
     if (newPriority.trim()) {
       setPriorities(prevPriorities => {
-        const currentActualPriorities = prevPriorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID);
-        if (currentActualPriorities.length < 3) {
-          return [...currentActualPriorities, { id: Date.now().toString(), text: newPriority, completed: false }];
+        const actualPriorities = prevPriorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID);
+        if (actualPriorities.length < 3) {
+          return [...actualPriorities, { id: Date.now().toString(), text: newPriority, completed: false }];
         }
-        // Optionally, toast if max priorities reached
-        if(currentActualPriorities.length >= 3) {
-            toast({ title: "Priorities Full", description: "Maximum of 3 priorities allowed."});
-        }
-        return prevPriorities.some(p => p.id === DEFAULT_PRIORITY_PLACEHOLDER_ID) ? prevPriorities : [DEFAULT_PRIORITY_PLACEHOLDER, ...currentActualPriorities].slice(0,4);
+        toast({ title: "Priorities Full", description: "Maximum of 3 priorities allowed."});
+        return prevPriorities; 
       });
       setNewPriority('');
     }
@@ -128,14 +148,13 @@ export function DailyOverviewCard() {
             }
             return p;
         });
-
-        const actualPriorities = updatedPriorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID);
-        if (actualPriorities.length === 0 && !updatedPriorities.find(p => p.id === DEFAULT_PRIORITY_PLACEHOLDER_ID && !p.completed)) {
-            return [DEFAULT_PRIORITY_PLACEHOLDER];
-        }
         
-        if (actualPriorities.length > 0 && updatedPriorities.some(p => p.id === DEFAULT_PRIORITY_PLACEHOLDER_ID)) {
-            return actualPriorities;
+        const actualPrioritiesList = updatedPriorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID);
+        if (actualPrioritiesList.length === 0 && !updatedPriorities.some(p => p.id === DEFAULT_PRIORITY_PLACEHOLDER_ID && !p.completed)) {
+           return [DEFAULT_PRIORITY_PLACEHOLDER];
+        }
+        if (actualPrioritiesList.length > 0 && updatedPriorities.some(p => p.id === DEFAULT_PRIORITY_PLACEHOLDER_ID)) {
+           return actualPrioritiesList;
         }
         return updatedPriorities;
     });
@@ -152,6 +171,9 @@ export function DailyOverviewCard() {
   };
 
   const displayablePriorities = priorities.filter(p => p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID);
+  const showAddPriorityInput = displayablePriorities.length < 3;
+  const showNoPrioritiesMessage = displayablePriorities.length === 0 && priorities.some(p => p.id === DEFAULT_PRIORITY_PLACEHOLDER_ID);
+
 
   return (
     <Card className="shadow-lg">
@@ -181,7 +203,7 @@ export function DailyOverviewCard() {
                     </li>
                   ))}
                 </ul>
-                {displayablePriorities.length < 3 && (
+                {showAddPriorityInput && (
                   <div className="mt-2 flex gap-2">
                     <Input 
                       value={newPriority} 
@@ -195,7 +217,7 @@ export function DailyOverviewCard() {
                     </Button>
                   </div>
                 )}
-                {displayablePriorities.length === 0 && priorities.some(p => p.id === DEFAULT_PRIORITY_PLACEHOLDER_ID) &&(
+                {showNoPrioritiesMessage && (
                   <p className="text-sm text-muted-foreground italic text-center py-2">No priorities set. Add up to 3!</p>
                 )}
               </div>
