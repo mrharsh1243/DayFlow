@@ -24,8 +24,8 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FFC0CB' }, 
-    { media: '(prefers-color-scheme: dark)', color: '#0F172A' } 
+    { media: '(prefers-color-scheme: light)', color: '#E3F2FD' }, // Default light theme color
+    { media: '(prefers-color-scheme: dark)', color: '#0F172A' }  // Default dark theme color
   ],
 };
 
@@ -42,7 +42,7 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
-          themes={['light', 'dark', 'system', 'premium', 'royal', 'blush', 'desertmint']}
+          themes={['light', 'dark', 'system', 'premium', 'royal', 'blush', 'desertmint', 'desertmintdark']}
         >
           {children}
           <Toaster />

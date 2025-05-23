@@ -170,14 +170,14 @@
     --sidebar-ring: 50 100% 55%;
   }
 
-  .blush { /* Updated for lighter page background, original pink cards */
-    --background: 350 100% 90%; /* Lighter Blush Pink (Page Background) - formerly card color */
+  .blush { 
+    --background: 350 100% 90%; /* Lighter Blush Pink (Page Background) */
     --foreground: 350 25% 35%; /* Dark Muted Rose/Brown */
 
-    --card: 350 60% 97%; /* Very Light Soft Blush (Tiles) - formerly page background */
+    --card: 350 60% 97%; /* Very Light Soft Blush (Tiles) */
     --card-foreground: 350 25% 35%;
 
-    --popover: 350 60% 97%; /* Matches new card */
+    --popover: 350 60% 97%; 
     --popover-foreground: 350 25% 35%;
 
     --primary: 350 32% 56%; /* Rose Gold */
@@ -186,7 +186,7 @@
     --secondary: 240 67% 94%; /* Lavender */
     --secondary-foreground: 240 40% 40%; /* Darker Lavender/Purple */
 
-    --muted: 350 80% 95%; /* Lighter and less saturated than the new background */
+    --muted: 350 80% 95%; 
     --muted-foreground: 350 30% 60%; /* Medium Muted Rose */
 
     --accent: 240 70% 85%; /* Brighter/Saturated Lavender */
@@ -195,8 +195,8 @@
     --destructive: 0 70% 75%; /* Soft Red */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 350 80% 85%; /* Adjusted for new background */
-    --input: 350 90% 94%;  /* Adjusted for new background */
+    --border: 350 80% 85%; 
+    --input: 350 90% 94%;  
 
     --radius: 0.5rem;
 
@@ -206,14 +206,14 @@
     --chart-4: 160 50% 80%; /* Soft Teal/Mint */
     --chart-5: 40 70% 80%;  /* Muted Gold/Peach */
     
-    --sidebar-background: 350 60% 99%; /* Very, very light blush for sidebar bg to contrast with page */
-    --sidebar-foreground: 350 30% 50%; /* Muted Rose Gold */
-    --sidebar-primary: 350 32% 56%; /* Rose Gold */
-    --sidebar-primary-foreground: 350 100% 98%; /* Very Light Pink/White */
-    --sidebar-accent: 350 70% 96%; /* Lighter, less saturated version of page bg for sidebar accent */
-    --sidebar-accent-foreground: 350 32% 56%; /* Rose Gold */
-    --sidebar-border: 300 50% 90%; /* Light Lavender/Pink */
-    --sidebar-ring: 350 32% 56%; /* Rose Gold */
+    --sidebar-background: 350 60% 99%; 
+    --sidebar-foreground: 350 30% 50%; 
+    --sidebar-primary: 350 32% 56%; 
+    --sidebar-primary-foreground: 350 100% 98%; 
+    --sidebar-accent: 350 70% 96%; 
+    --sidebar-accent-foreground: 350 32% 56%; 
+    --sidebar-border: 300 50% 90%; 
+    --sidebar-ring: 350 32% 56%; 
   }
 
   .desertmint {
@@ -261,6 +261,53 @@
     --sidebar-accent-foreground: 150 50% 50%;
     --sidebar-border: 40 30% 82%;
     --sidebar-ring: 150 50% 50%;
+  }
+
+  .desertmintdark {
+    --background: 40 10% 15%; /* Dark Brownish Gray */
+    --foreground: 40 30% 85%; /* Pale Beige */
+
+    --card: 40 10% 20%; /* Slightly Lighter Dark Brownish Gray */
+    --card-foreground: 40 30% 85%;
+
+    --popover: 40 10% 18%; /* Darker popover */
+    --popover-foreground: 40 30% 85%;
+
+    --primary: 150 55% 55%; /* Mint Green (slightly brighter) */
+    --primary-foreground: 150 100% 10%; /* Dark green for contrast on primary */
+
+    --secondary: 150 15% 30%; /* Dark Muted Mint */
+    --secondary-foreground: 40 30% 80%; /* Lighter text on secondary */
+
+    --muted: 40 8% 25%; /* Even Darker Muted Brownish Gray */
+    --muted-foreground: 40 25% 65%; /* Softer Pale Beige for muted text */
+
+    --accent: 150 55% 55%; /* Mint Green (same as primary for strong accent) */
+    --accent-foreground: 150 100% 10%;
+
+    --destructive: 0 60% 45%; /* A standard red for destructive actions, slightly desaturated for dark */
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 40 10% 30%; /* Darker border */
+    --input: 40 10% 28%; /* Darker input */
+    --ring: 150 55% 55%; /* Mint Green for focus rings */
+
+    --radius: 0.5rem;
+
+    --chart-1: 150 50% 50%; /* Mint Green */
+    --chart-2: 40 20% 40%;  /* Muted Dark Beige/Tan */
+    --chart-3: 150 35% 30%; /* Darker Mint/Forest Green */
+    --chart-4: 40 15% 50%;  /* Warmer Dark Beige/Light Tan */
+    --chart-5: 150 25% 60%; /* Desaturated Lighter Mint */
+    
+    --sidebar-background: 40 10% 12%; /* Very Dark Brownish Gray for sidebar */
+    --sidebar-foreground: 40 30% 80%;
+    --sidebar-primary: 150 55% 55%;
+    --sidebar-primary-foreground: 150 100% 10%;
+    --sidebar-accent: 40 10% 22%; /* Dark accent for sidebar */
+    --sidebar-accent-foreground: 150 55% 55%;
+    --sidebar-border: 40 10% 28%;
+    --sidebar-ring: 150 55% 55%;
   }
 }
 

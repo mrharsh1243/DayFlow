@@ -42,7 +42,7 @@ export function Header() {
   else if (resolvedTheme === 'premium') TriggerIcon = Gem;
   else if (resolvedTheme === 'royal') TriggerIcon = Crown;
   else if (resolvedTheme === 'blush') TriggerIcon = Heart;
-  else if (resolvedTheme === 'desertmint') TriggerIcon = Leaf;
+  else if (resolvedTheme === 'desertmint' || resolvedTheme === 'desertmintdark') TriggerIcon = Leaf;
 
 
   return (
@@ -84,6 +84,10 @@ export function Header() {
             <DropdownMenuItem onClick={() => setTheme('desertmint')}>
               <Leaf className="mr-2 h-4 w-4" />
               <span>Desert Mint</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme('desertmintdark')}>
+              <Leaf className="mr-2 h-4 w-4" /> {/* Using Leaf icon for dark variant as well */}
+              <span>Desert Mint Dark</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setTheme('system')}>
