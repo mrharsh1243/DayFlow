@@ -42,7 +42,7 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
-          themes={['light', 'dark', 'system', 'premium', 'royal', 'blush']}
+          themes={['light', 'dark', 'system', 'premium', 'royal', 'blush', 'desertmint']}
         >
           {children}
           <Toaster />

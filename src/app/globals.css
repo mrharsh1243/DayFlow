@@ -215,6 +215,53 @@
     --sidebar-border: 300 50% 90%; /* Light Lavender/Pink */
     --sidebar-ring: 350 32% 56%; /* Rose Gold */
   }
+
+  .desertmint {
+    --background: 40 50% 95%; /* Beige */
+    --foreground: 150 15% 25%; /* Dark Gray/Green */
+
+    --card: 40 50% 98%; /* Slightly Lighter Beige for cards */
+    --card-foreground: 150 15% 25%;
+
+    --popover: 40 50% 98%;
+    --popover-foreground: 150 15% 25%;
+
+    --primary: 150 50% 50%; /* Mint Green */
+    --primary-foreground: 150 100% 10%; /* Dark green for contrast on primary */
+
+    --secondary: 150 40% 85%; /* Lighter, less saturated Mint Green */
+    --secondary-foreground: 150 20% 30%;
+
+    --muted: 40 40% 90%; /* Muted Beige */
+    --muted-foreground: 150 15% 45%; /* Softer Gray/Green */
+
+    --accent: 150 50% 50%; /* Mint Green (same as primary for strong accent) */
+    --accent-foreground: 150 100% 10%;
+
+    --destructive: 0 70% 55%; /* A standard red for destructive actions */
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 40 30% 85%; /* Softer Beige for borders */
+    --input: 40 40% 92%; /* Light Beige for input fields */
+    --ring: 150 50% 50%; /* Mint Green for focus rings */
+
+    --radius: 0.5rem;
+
+    --chart-1: 150 50% 45%; /* Mint Green */
+    --chart-2: 40 30% 60%;  /* Muted Beige/Tan */
+    --chart-3: 150 30% 35%; /* Darker Mint/Forest Green */
+    --chart-4: 40 60% 70%;  /* Warmer Beige/Light Tan */
+    --chart-5: 150 20% 55%; /* Desaturated Mint */
+    
+    --sidebar-background: 40 50% 92%; /* Slightly darker beige for sidebar */
+    --sidebar-foreground: 150 15% 30%;
+    --sidebar-primary: 150 50% 50%;
+    --sidebar-primary-foreground: 150 100% 10%;
+    --sidebar-accent: 40 50% 97%; /* Very light beige for sidebar accent */
+    --sidebar-accent-foreground: 150 50% 50%;
+    --sidebar-border: 40 30% 82%;
+    --sidebar-ring: 150 50% 50%;
+  }
 }
 
 @layer base {
