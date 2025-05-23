@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -170,13 +171,13 @@
   }
 
   .blush { /* Renamed from .soft to .blush */
-    --background: 350 100% 88%; /* Blush Pink */
+    --background: 350 80% 96%; /* Very Light, Soft Pink */
     --foreground: 350 25% 35%; /* Dark Muted Rose/Brown */
 
-    --card: 350 100% 90%; /* Lighter Blush Pink */
+    --card: 350 70% 97%; /* Very Light Blush */
     --card-foreground: 350 25% 35%;
 
-    --popover: 350 100% 90%;
+    --popover: 350 70% 97%; /* Matches card */
     --popover-foreground: 350 25% 35%;
 
     --primary: 350 32% 56%; /* Rose Gold */
@@ -185,7 +186,7 @@
     --secondary: 240 67% 94%; /* Lavender */
     --secondary-foreground: 240 40% 40%; /* Darker Lavender/Purple */
 
-    --muted: 350 70% 95%; /* Very Light Desaturated Pink */
+    --muted: 350 50% 92%; /* Desaturated Light Pink */
     --muted-foreground: 350 30% 60%; /* Medium Muted Rose */
 
     --accent: 240 70% 85%; /* Brighter/Saturated Lavender */
@@ -194,8 +195,8 @@
     --destructive: 0 70% 75%; /* Soft Red */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 350 60% 80%; /* Darker Blush Pink */
-    --input: 350 80% 92%; /* Lighter Blush Pink for Input Background */
+    --border: 350 60% 90%; /* Softer Pink Border */
+    --input: 350 70% 94%; /* Light Pink Input Background */
     --ring: 350 32% 56%; /* Rose Gold */
 
     --radius: 0.5rem;
@@ -210,7 +211,7 @@
     --sidebar-foreground: 350 30% 50%; /* Muted Rose Gold */
     --sidebar-primary: 350 32% 56%; /* Rose Gold */
     --sidebar-primary-foreground: 350 100% 98%; /* Very Light Pink/White */
-    --sidebar-accent: 350 100% 92%; /* Lighter Blush Pink */
+    --sidebar-accent: 350 70% 95%; /* Less saturated Lighter Blush Pink */
     --sidebar-accent-foreground: 350 32% 56%; /* Rose Gold */
     --sidebar-border: 300 50% 90%; /* Light Lavender/Pink */
     --sidebar-ring: 350 32% 56%; /* Rose Gold */
@@ -225,3 +226,5 @@
     @apply bg-background text-foreground;
   }
 }
+
+    
