@@ -1,7 +1,7 @@
 
 "use client";
 
-import { LayoutGrid, Moon, Sun, Palette, Gem, Crown, Tv, Heart, Leaf } from 'lucide-react';
+import { LayoutGrid, Moon, Sun, Palette, Gem, Crown, Tv, Heart, Leaf, MoreHorizontal } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +11,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import { useEffect, useState } from 'react';
 
@@ -69,31 +73,41 @@ export function Header() {
               <Moon className="mr-2 h-4 w-4" />
               <span>Dark</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme('premium')}>
-              <Gem className="mr-2 h-4 w-4" />
-              <span>Premium</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme('royal')}>
-              <Crown className="mr-2 h-4 w-4" />
-              <span>Royal</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme('blush')}>
-              <Heart className="mr-2 h-4 w-4" />
-              <span>Blush</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme('desertmint')}>
-              <Leaf className="mr-2 h-4 w-4" />
-              <span>Desert Mint</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme('desertmintdark')}>
-              <Leaf className="mr-2 h-4 w-4" /> {/* Using Leaf icon for dark variant as well */}
-              <span>Desert Mint Dark</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setTheme('system')}>
               <Tv className="mr-2 h-4 w-4" />
               <span>System</span>
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Palette className="mr-2 h-4 w-4" />
+                <span>Styled Themes</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onClick={() => setTheme('premium')}>
+                    <Gem className="mr-2 h-4 w-4" />
+                    <span>Premium</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme('royal')}>
+                    <Crown className="mr-2 h-4 w-4" />
+                    <span>Royal</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme('blush')}>
+                    <Heart className="mr-2 h-4 w-4" />
+                    <span>Blush</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme('desertmint')}>
+                    <Leaf className="mr-2 h-4 w-4" />
+                    <span>Desert Mint</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme('desertmintdark')}>
+                    <Leaf className="mr-2 h-4 w-4" />
+                    <span>Desert Mint Dark</span>
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
