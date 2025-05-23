@@ -171,10 +171,10 @@
   }
 
   .blush { /* Renamed from .soft to .blush */
-    --background: 350 100% 88%; /* #FFC0CB - Blush Pink */
+    --background: 350 60% 97%; /* Very Light Soft Blush */
     --foreground: 350 25% 35%; /* Dark Muted Rose/Brown */
 
-    --card: 350 100% 90%; /* #FFD1D9 - Lighter Blush Pink */
+    --card: 350 100% 90%; /* #FFD1D9 - Lighter Blush Pink (Tiles) */
     --card-foreground: 350 25% 35%;
 
     --popover: 350 100% 90%; /* Matches card */
@@ -186,7 +186,7 @@
     --secondary: 240 67% 94%; /* Lavender */
     --secondary-foreground: 240 40% 40%; /* Darker Lavender/Purple */
 
-    --muted: 350 70% 95%; /* #FFE3E9 - Light Muted Pink */
+    --muted: 350 80% 94%; /* Light Muted Pink - for subtle backgrounds */
     --muted-foreground: 350 30% 60%; /* Medium Muted Rose */
 
     --accent: 240 70% 85%; /* Brighter/Saturated Lavender */
@@ -195,9 +195,8 @@
     --destructive: 0 70% 75%; /* Soft Red */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 350 60% 80%; /* #F7B3C2 - Softer Pink Border */
-    --input: 350 80% 92%; /* #FFDBE3 - Light Pink Input Background */
-    --ring: 350 32% 56%; /* Rose Gold */
+    --border: 350 70% 88%; /* Pink Border, adjusted for lighter BG */
+    --input: 350 90% 93%; /* Light Pink Input Background, distinct from main BG */
 
     --radius: 0.5rem;
 
@@ -207,11 +206,11 @@
     --chart-4: 160 50% 80%; /* Soft Teal/Mint */
     --chart-5: 40 70% 80%;  /* Muted Gold/Peach */
     
-    --sidebar-background: 240 100% 97%; /* Very Light Lavender */
+    --sidebar-background: 350 60% 98%; /* Very, very light blush for sidebar bg */
     --sidebar-foreground: 350 30% 50%; /* Muted Rose Gold */
     --sidebar-primary: 350 32% 56%; /* Rose Gold */
     --sidebar-primary-foreground: 350 100% 98%; /* Very Light Pink/White */
-    --sidebar-accent: 350 100% 92%; /* #FFDBE3 - Matches Input/Lighter Blush Pink */
+    --sidebar-accent: 350 100% 92%; /* Lighter Blush Pink (matches card elements slightly) */
     --sidebar-accent-foreground: 350 32% 56%; /* Rose Gold */
     --sidebar-border: 300 50% 90%; /* Light Lavender/Pink */
     --sidebar-ring: 350 32% 56%; /* Rose Gold */
