@@ -5,13 +5,13 @@
 
 @layer base {
   :root {
-    --background: 206 89% 94%; /* #E3F2FD - Light Sky Blue */
+    --background: 206 89% 90%; /* #D9EEFB - Slightly Darker Light Sky Blue */
     --foreground: 210 30% 25%; /* Darker blue-gray for text */
 
-    --card: 206 89% 96%; /* Slightly lighter than background */
+    --card: 206 89% 94%; /* Lighter than new background for contrast */
     --card-foreground: 210 30% 25%;
 
-    --popover: 206 89% 96%;
+    --popover: 206 89% 94%; /* Match card background */
     --popover-foreground: 210 30% 25%;
 
     --primary: 207 88% 68%; /* #64B5F6 - Main Blue */
@@ -20,7 +20,7 @@
     --secondary: 207 80% 88%; /* Lighter shade of primary for secondary elements */
     --secondary-foreground: 210 30% 20%; /* Darker for text on secondary */
 
-    --muted: 207 70% 92%; /* More desaturated/lighter blue for muted states */
+    --muted: 207 70% 93%; /* More desaturated/lighter blue for muted states, slightly lighter than input */
     --muted-foreground: 210 25% 55%; /* Slightly lighter foreground for muted text */
 
     --accent: 33 100% 65%; /* #FFB74D - Orange Accent */
@@ -29,8 +29,8 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 207 60% 85%; /* Slightly darker shade of background for borders */
-    --input: 207 70% 90%; /* Input background */
+    --border: 207 60% 82%; /* Slightly darker/more defined border */
+    --input: 207 70% 92%; /* Input background, lighter than main bg */
     --ring: 207 88% 68%; /* Primary color for focus rings */
 
     --radius: 0.5rem;
