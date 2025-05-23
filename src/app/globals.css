@@ -8,10 +8,10 @@
     --background: 206 89% 85%; /* #CDE9FA - Even Darker Light Sky Blue */
     --foreground: 210 30% 25%; /* Darker blue-gray for text */
 
-    --card: 206 89% 89%; /* Lighter than new background for contrast */
+    --card: 206 89% 93%; /* Lighter for cards/tiles */
     --card-foreground: 210 30% 25%;
 
-    --popover: 206 89% 89%; /* Match card background */
+    --popover: 206 89% 93%; /* Match new card background */
     --popover-foreground: 210 30% 25%;
 
     --primary: 207 88% 68%; /* #64B5F6 - Main Blue */
@@ -171,13 +171,13 @@
   }
 
   .blush { 
-    --background: 350 100% 90%; /* Lighter Blush Pink (Page Background) */
+    --background: 350 80% 96%; /* Very Light, Soft Pink (Page Background) */
     --foreground: 350 25% 35%; /* Dark Muted Rose/Brown */
 
-    --card: 350 60% 97%; /* Very Light Soft Blush (Tiles) */
+    --card: 350 100% 90%; /* Lighter Blush Pink (Tiles) - More Saturated */
     --card-foreground: 350 25% 35%;
 
-    --popover: 350 60% 97%; 
+    --popover: 350 100% 90%; /* Match card */
     --popover-foreground: 350 25% 35%;
 
     --primary: 350 32% 56%; /* Rose Gold */
@@ -186,7 +186,7 @@
     --secondary: 240 67% 94%; /* Lavender */
     --secondary-foreground: 240 40% 40%; /* Darker Lavender/Purple */
 
-    --muted: 350 80% 95%; 
+    --muted: 350 60% 92%; /* Muted light pink */
     --muted-foreground: 350 30% 60%; /* Medium Muted Rose */
 
     --accent: 240 70% 85%; /* Brighter/Saturated Lavender */
@@ -195,8 +195,8 @@
     --destructive: 0 70% 75%; /* Soft Red */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 350 80% 85%; 
-    --input: 350 90% 94%;  
+    --border: 350 70% 88%; /* Light pink border */
+    --input: 350 80% 94%;  /* Light pink input, distinct from main bg */
 
     --radius: 0.5rem;
 
