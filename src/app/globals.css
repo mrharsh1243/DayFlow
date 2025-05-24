@@ -40,7 +40,7 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -52,7 +52,7 @@
   }
 
   .dark {
-    --background: 210 30% 10%; 
+    --background: 210 30% 10%;
     --foreground: 206 89% 94%;
 
     --card: 210 30% 12%;
@@ -61,7 +61,7 @@
     --popover: 210 30% 10%;
     --popover-foreground: 206 89% 94%;
 
-    --primary: 207 88% 68%; 
+    --primary: 207 88% 68%;
     --primary-foreground: 210 100% 10%;
 
     --secondary: 210 30% 20%;
@@ -70,7 +70,7 @@
     --muted: 210 30% 15%;
     --muted-foreground: 206 80% 80%;
 
-    --accent: 33 100% 65%; 
+    --accent: 33 100% 65%;
     --accent-foreground: 20 100% 10%;
 
     --destructive: 0 62.8% 30.6%;
@@ -79,7 +79,7 @@
     --border: 210 30% 25%;
     --input: 210 30% 22%;
     --ring: 207 88% 68%;
-    
+
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -122,7 +122,7 @@
     --chart-3: 220 20% 60%; /* Light Blue-Grey */
     --chart-4: 220 15% 40%; /* Medium Blue-Grey */
     --chart-5: 30 20% 50%; /* Muted Brown */
-    
+
     --sidebar-background: 220 25% 12%;
     --sidebar-foreground: 220 15% 80%;
     --sidebar-primary: 45 80% 60%;
@@ -170,14 +170,14 @@
     --sidebar-ring: 50 100% 55%;
   }
 
-  .blush { 
-    --background: 350 80% 96%; /* Very Light, Soft Pink (Page Background) */
+  .blush {
+    --background: 350 100% 90%; /* Lighter Blush Pink (Page Background) */
     --foreground: 350 25% 35%; /* Dark Muted Rose/Brown */
 
-    --card: 350 100% 90%; /* Lighter Blush Pink (Tiles) - More Saturated */
+    --card: 350 80% 96%; /* Subtle Pink (Tiles) */
     --card-foreground: 350 25% 35%;
 
-    --popover: 350 100% 90%; /* Match card */
+    --popover: 350 80% 96%; /* Match card */
     --popover-foreground: 350 25% 35%;
 
     --primary: 350 32% 56%; /* Rose Gold */
@@ -186,7 +186,7 @@
     --secondary: 240 67% 94%; /* Lavender */
     --secondary-foreground: 240 40% 40%; /* Darker Lavender/Purple */
 
-    --muted: 350 60% 92%; /* Muted light pink */
+    --muted: 350 80% 94%; /* Muted subtle pink, lighter than BG */
     --muted-foreground: 350 30% 60%; /* Medium Muted Rose */
 
     --accent: 240 70% 85%; /* Brighter/Saturated Lavender */
@@ -195,8 +195,8 @@
     --destructive: 0 70% 75%; /* Soft Red */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 350 70% 88%; /* Light pink border */
-    --input: 350 80% 94%;  /* Light pink input, distinct from main bg */
+    --border: 350 90% 85%; /* Border for Lighter Blush Pink BG */
+    --input: 350 90% 93%;  /* Input for Lighter Blush Pink BG */
 
     --radius: 0.5rem;
 
@@ -205,15 +205,15 @@
     --chart-3: 340 70% 70%; /* Medium Pink */
     --chart-4: 160 50% 80%; /* Soft Teal/Mint */
     --chart-5: 40 70% 80%;  /* Muted Gold/Peach */
-    
-    --sidebar-background: 350 60% 99%; 
-    --sidebar-foreground: 350 30% 50%; 
-    --sidebar-primary: 350 32% 56%; 
-    --sidebar-primary-foreground: 350 100% 98%; 
-    --sidebar-accent: 350 70% 96%; 
-    --sidebar-accent-foreground: 350 32% 56%; 
-    --sidebar-border: 300 50% 90%; 
-    --sidebar-ring: 350 32% 56%; 
+
+    --sidebar-background: 350 90% 88%; /* Slightly darker than main bg */
+    --sidebar-foreground: 350 30% 50%;
+    --sidebar-primary: 350 32% 56%;
+    --sidebar-primary-foreground: 350 100% 98%;
+    --sidebar-accent: 350 100% 92%; /* Lighter, more saturated pink for sidebar hover */
+    --sidebar-accent-foreground: 350 32% 56%;
+    --sidebar-border: 350 80% 83%;
+    --sidebar-ring: 350 32% 56%;
   }
 
   .desertmint {
@@ -252,7 +252,7 @@
     --chart-3: 150 30% 35%; /* Darker Mint/Forest Green */
     --chart-4: 40 60% 70%;  /* Warmer Beige/Light Tan */
     --chart-5: 150 20% 55%; /* Desaturated Mint */
-    
+
     --sidebar-background: 40 50% 92%; /* Slightly darker beige for sidebar */
     --sidebar-foreground: 150 15% 30%;
     --sidebar-primary: 150 50% 50%;
@@ -299,7 +299,7 @@
     --chart-3: 150 35% 30%; /* Darker Mint/Forest Green */
     --chart-4: 40 15% 50%;  /* Warmer Dark Beige/Light Tan */
     --chart-5: 150 25% 60%; /* Desaturated Lighter Mint */
-    
+
     --sidebar-background: 40 10% 12%; /* Very Dark Brownish Gray for sidebar */
     --sidebar-foreground: 40 30% 80%;
     --sidebar-primary: 150 55% 55%;
