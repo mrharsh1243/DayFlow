@@ -49,10 +49,8 @@ export function AiFeaturesCard() {
   const [otherObligations, setOtherObligations] = useState("Need 20 mins travel time each way. School pick-up at 3:30 PM.");
 
   const [overallGoal, setOverallGoal] = useState("Have a productive day focusing on Project Alpha and maintaining work-life balance.");
-  const [tasksToSchedule, setTasksToSchedule] = useState("Draft Project Alpha proposal\nReview Q2 financials\nTeam meeting re: Project Beta\nWorkout session\nCall with supplier");
-  const [fixedEvents, setFixedEvents] = useState("11:00-11:30 Standup meeting. 14:00-15:00 Client demo call.");
+  const [itemsToScheduleForAI, setItemsToScheduleForAI] = useState("Draft Project Alpha proposal\nReview Q2 financials\nTeam meeting re: Project Beta 14:00-15:00\nWorkout session\nCall with supplier");
   const [schedulePreferences, setSchedulePreferences] = useState("Prefer focused work in the morning. Group small admin tasks together if possible.");
-  // Removed scheduleAvailableStartTime and scheduleAvailableEndTime states
   const [currentDateTime, setCurrentDateTime] = useState('');
 
   useEffect(() => {
@@ -148,7 +146,7 @@ export function AiFeaturesCard() {
         id: Date.now().toString(),
         text: taskName, 
         completed: false,
-        isLocked: true,
+        isLocked: true, // Single locked time is always locked
       };
 
       tasksByTimeSlot[timeSlotId].push(newTask);
@@ -190,20 +188,19 @@ export function AiFeaturesCard() {
     setIsLoadingSmartSchedule(true);
     setSmartScheduleResult(null);
     try {
-      const tasksArray = tasksToSchedule.split('\n').map(t => t.trim()).filter(t => t.length > 0);
-      if (tasksArray.length === 0) {
-        toast({ title: "Input Error", description: "Please provide at least one task to schedule.", variant: "destructive"});
+      const itemsArray = itemsToScheduleForAI.split('\n').map(t => t.trim()).filter(t => t.length > 0);
+      if (itemsArray.length === 0) {
+        toast({ title: "Input Error", description: "Please provide at least one task or event to schedule.", variant: "destructive"});
         setIsLoadingSmartSchedule(false);
         return;
       }
       const input: SmartScheduleInput = {
         overallGoal,
-        tasksToSchedule: tasksArray,
-        fixedEvents: fixedEvents || undefined,
+        itemsToSchedule: itemsArray,
         preferences: schedulePreferences || undefined,
         currentDayTime: currentDateTime,
-        availableStartTime: "06:00", // Default full range
-        availableEndTime: "22:00",   // Default full range
+        availableStartTime: "06:00", 
+        availableEndTime: "22:00",   
       };
       const result = await generateSmartSchedule(input);
       setSmartScheduleResult(result);
@@ -223,6 +220,7 @@ export function AiFeaturesCard() {
       const storedTimeblockTasks = localStorage.getItem('dayflow-timeblock-tasks');
       let tasksByTimeSlot: Record<string, Task[]> = storedTimeblockTasks ? JSON.parse(storedTimeblockTasks) : {};
       
+      // Clear existing non-locked tasks
       for (const slotId in tasksByTimeSlot) {
         tasksByTimeSlot[slotId] = tasksByTimeSlot[slotId].filter(task => task.isLocked);
       }
@@ -237,9 +235,10 @@ export function AiFeaturesCard() {
             id: `${Date.now().toString()}-${item.taskName.replace(/\s+/g, '-')}`,
             text: item.taskName,
             completed: false,
-            isLocked: fixedEvents?.toLowerCase().includes(item.taskName.toLowerCase()), 
+            isLocked: item.isFixedEvent === true, 
           };
-          if (!tasksByTimeSlot[timeSlotId].find(t => t.text === newTask.text)) {
+          // Avoid adding duplicates if a locked event was already there
+          if (!tasksByTimeSlot[timeSlotId].find(t => t.text === newTask.text && t.isLocked === newTask.isLocked)) {
              tasksByTimeSlot[timeSlotId].push(newTask);
           }
         } else {
@@ -290,14 +289,9 @@ export function AiFeaturesCard() {
                         <Textarea id="overallGoal" value={overallGoal} onChange={(e) => setOverallGoal(e.target.value)} className="col-span-3" placeholder="e.g., Focus on Project X, prepare for presentation" />
                       </div>
                       <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
-                        <Label htmlFor="tasksToSchedule" className="text-right pt-2 col-span-1">Tasks (one per line)</Label>
-                        <Textarea id="tasksToSchedule" value={tasksToSchedule} onChange={(e) => setTasksToSchedule(e.target.value)} className="col-span-3" placeholder="e.g., Write report\nCall client\nGym session" rows={4}/>
+                        <Label htmlFor="itemsToScheduleForAI" className="text-right pt-2 col-span-1">Tasks & Events (one per line)</Label>
+                        <Textarea id="itemsToScheduleForAI" value={itemsToScheduleForAI} onChange={(e) => setItemsToScheduleForAI(e.target.value)} className="col-span-3" placeholder="e.g., Write report\nTeam meeting 10-11 AM\nCall client\nWorkout session at 5 PM" rows={5}/>
                       </div>
-                      <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
-                        <Label htmlFor="fixedEvents" className="text-right pt-2 col-span-1">Fixed Events</Label>
-                        <Textarea id="fixedEvents" value={fixedEvents} onChange={(e) => setFixedEvents(e.target.value)} className="col-span-3" placeholder="e.g., Meeting 10-11 AM, Lunch 1-2 PM" />
-                      </div>
-                      {/* Removed Available From and Available Until inputs */}
                       <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
                         <Label htmlFor="schedulePreferences" className="text-right pt-2 col-span-1">Preferences (Optional)</Label>
                         <Textarea id="schedulePreferences" value={schedulePreferences} onChange={(e) => setSchedulePreferences(e.target.value)} className="col-span-3" placeholder="e.g., Morning for deep work, short breaks every 90 mins" />
@@ -319,7 +313,7 @@ export function AiFeaturesCard() {
                             {smartScheduleResult.scheduledTasks.map((item, index) => (
                               <li key={index} className="p-2 border-b border-primary/20">
                                 <p className="font-medium text-primary-foreground bg-primary/80 px-2 py-1 rounded-t-md">
-                                    {item.suggestedStartTime} - {item.taskName}
+                                    {item.suggestedStartTime} - {item.taskName} {item.isFixedEvent && <span className="text-xs opacity-80">(Fixed)</span>}
                                 </p>
                                 {item.justification && <p className="text-xs text-muted-foreground mt-1 pl-1">{item.justification}</p>}
                               </li>
@@ -464,7 +458,3 @@ export function AiFeaturesCard() {
     </Card>
   );
 }
-
-    
-
-    
