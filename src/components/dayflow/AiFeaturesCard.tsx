@@ -52,8 +52,7 @@ export function AiFeaturesCard() {
   const [tasksToSchedule, setTasksToSchedule] = useState("Draft Project Alpha proposal\nReview Q2 financials\nTeam meeting re: Project Beta\nWorkout session\nCall with supplier");
   const [fixedEvents, setFixedEvents] = useState("11:00-11:30 Standup meeting. 14:00-15:00 Client demo call.");
   const [schedulePreferences, setSchedulePreferences] = useState("Prefer focused work in the morning. Group small admin tasks together if possible.");
-  const [scheduleAvailableStartTime, setScheduleAvailableStartTime] = useState("08:00");
-  const [scheduleAvailableEndTime, setScheduleAvailableEndTime] = useState("18:00");
+  // Removed scheduleAvailableStartTime and scheduleAvailableEndTime states
   const [currentDateTime, setCurrentDateTime] = useState('');
 
   useEffect(() => {
@@ -203,8 +202,8 @@ export function AiFeaturesCard() {
         fixedEvents: fixedEvents || undefined,
         preferences: schedulePreferences || undefined,
         currentDayTime: currentDateTime,
-        availableStartTime: scheduleAvailableStartTime,
-        availableEndTime: scheduleAvailableEndTime,
+        availableStartTime: "06:00", // Default full range
+        availableEndTime: "22:00",   // Default full range
       };
       const result = await generateSmartSchedule(input);
       setSmartScheduleResult(result);
@@ -282,7 +281,7 @@ export function AiFeaturesCard() {
                 <DialogContent className="sm:max-w-[700px] flex flex-col max-h-[85vh]">
                   <DialogHeader>
                     <DialogTitle>Generate Smart Schedule</DialogTitle>
-                    <DialogDescription>Provide details for the AI to create a comprehensive schedule for your day.</DialogDescription>
+                    <DialogDescription>Provide key details for the AI to create a schedule for your day.</DialogDescription>
                   </DialogHeader>
                   <div className="flex-grow overflow-y-auto py-4 pr-2 space-y-4">
                     <div className="space-y-4"> {/* Input fields container */}
@@ -298,16 +297,9 @@ export function AiFeaturesCard() {
                         <Label htmlFor="fixedEvents" className="text-right pt-2 col-span-1">Fixed Events</Label>
                         <Textarea id="fixedEvents" value={fixedEvents} onChange={(e) => setFixedEvents(e.target.value)} className="col-span-3" placeholder="e.g., Meeting 10-11 AM, Lunch 1-2 PM" />
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
-                        <Label htmlFor="scheduleAvailableStartTime" className="text-right col-span-1">Available From</Label>
-                        <Input id="scheduleAvailableStartTime" type="time" value={scheduleAvailableStartTime} onChange={(e) => setScheduleAvailableStartTime(e.target.value)} className="col-span-3" />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
-                        <Label htmlFor="scheduleAvailableEndTime" className="text-right col-span-1">Available Until</Label>
-                        <Input id="scheduleAvailableEndTime" type="time" value={scheduleAvailableEndTime} onChange={(e) => setScheduleAvailableEndTime(e.target.value)} className="col-span-3" />
-                      </div>
+                      {/* Removed Available From and Available Until inputs */}
                       <div className="grid grid-cols-4 items-start gap-x-4 gap-y-2">
-                        <Label htmlFor="schedulePreferences" className="text-right pt-2 col-span-1">Preferences</Label>
+                        <Label htmlFor="schedulePreferences" className="text-right pt-2 col-span-1">Preferences (Optional)</Label>
                         <Textarea id="schedulePreferences" value={schedulePreferences} onChange={(e) => setSchedulePreferences(e.target.value)} className="col-span-3" placeholder="e.g., Morning for deep work, short breaks every 90 mins" />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-x-4 gap-y-2">
@@ -472,5 +464,7 @@ export function AiFeaturesCard() {
     </Card>
   );
 }
+
+    
 
     
