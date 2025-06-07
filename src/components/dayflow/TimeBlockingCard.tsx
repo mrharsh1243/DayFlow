@@ -28,7 +28,6 @@ interface ScheduledTask extends Task {
   timeSlotId: string;
 }
 
-// Hoist TimeSlot to be a top-level component or ensure it's defined before TimeBlockingCard
 interface TimeSlotProps {
   slot: TimeSlotType;
   tasks: ScheduledTask[];
@@ -243,7 +242,7 @@ export function TimeBlockingCard() {
         if (tasksInSlot.length === 0) return; 
 
         const slotDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), slotHour);
-        if (slotDate.toDateString() !== todayString) return; // Only for today's slots
+        if (slotDate.toDateString() !== todayString) return; 
 
         if (currentHour === slotHour && currentMinute === 0) {
           if (!playedStartSounds[slot.id]) {
@@ -282,23 +281,23 @@ export function TimeBlockingCard() {
   
       if (newActiveIndex !== -1) {
         if (newActiveIndex !== activeSlotIndexRef.current) {
-          const behavior = activeSlotIndexRef.current === null ? 'smooth' : 'smooth'; // Use smooth for initial as well
+          const behavior = activeSlotIndexRef.current === null ? 'smooth' : 'smooth'; 
           slotRefs.current[newActiveIndex]?.scrollIntoView({
             behavior: behavior,
-            block: 'center',
+            block: 'nearest', // Changed from 'center' to 'nearest'
           });
           activeSlotIndexRef.current = newActiveIndex;
         }
       } else {
-         activeSlotIndexRef.current = null; // No active slot for today
+         activeSlotIndexRef.current = null; 
       }
     };
   
-    scrollLogic(); // Initial scroll
-    const scrollIntervalId = setInterval(scrollLogic, 60000); // Check every minute
+    scrollLogic(); 
+    const scrollIntervalId = setInterval(scrollLogic, 60000); 
   
     return () => clearInterval(scrollIntervalId);
-  }, [isClient, refreshKey]); // refreshKey might be relevant if data loading affects layout/refs
+  }, [isClient, refreshKey]); 
 
 
   const addTaskToSlot = useCallback((timeSlotId: string, taskText: string, isLocked: boolean = false) => {
