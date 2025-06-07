@@ -176,6 +176,7 @@ export function TimeBlockingCard() {
 
   const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
   const activeSlotIndexRef = useRef<number | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null); // Ref for the ScrollArea's root div
 
   const [playedStartSounds, setPlayedStartSounds] = useState<Record<string, boolean>>({});
   const [playedWarningSounds, setPlayedWarningSounds] = useState<Record<string, boolean>>({});
@@ -280,13 +281,25 @@ export function TimeBlockingCard() {
       });
   
       if (newActiveIndex !== -1) {
-        if (newActiveIndex !== activeSlotIndexRef.current) {
-          const behavior = activeSlotIndexRef.current === null ? 'smooth' : 'smooth'; 
-          slotRefs.current[newActiveIndex]?.scrollIntoView({
-            behavior: behavior,
-            block: 'nearest', // Changed from 'center' to 'nearest'
-          });
-          activeSlotIndexRef.current = newActiveIndex;
+        if (newActiveIndex !== activeSlotIndexRef.current || activeSlotIndexRef.current === null) {
+          const activeSlotElement = slotRefs.current[newActiveIndex];
+          const viewportElement = scrollAreaRef.current?.firstElementChild as HTMLElement | null; // Get the viewport div
+
+          if (activeSlotElement && viewportElement) {
+            const slotOffsetTop = activeSlotElement.offsetTop;
+            const slotClientHeight = activeSlotElement.clientHeight;
+            const viewportClientHeight = viewportElement.clientHeight;
+            
+            let newScrollTop = slotOffsetTop - (viewportClientHeight / 2) + (slotClientHeight / 2);
+            newScrollTop = Math.max(0, newScrollTop);
+            newScrollTop = Math.min(newScrollTop, viewportElement.scrollHeight - viewportClientHeight);
+            
+            viewportElement.scrollTo({
+              top: newScrollTop,
+              behavior: activeSlotIndexRef.current === null ? 'auto' : 'smooth',
+            });
+            activeSlotIndexRef.current = newActiveIndex;
+          }
         }
       } else {
          activeSlotIndexRef.current = null; 
@@ -381,7 +394,7 @@ export function TimeBlockingCard() {
           </AccordionTrigger>
           <AccordionContent>
             <CardContent className="p-6 pt-2">
-              <ScrollArea className="h-[60vh] pr-3"> 
+              <ScrollArea ref={scrollAreaRef} className="h-[60vh] pr-3"> 
                 <div className="space-y-3"> 
                   {TIME_SLOTS.map((slot, index) => (
                     <TimeSlot
