@@ -266,9 +266,30 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const [isClient, setIsClient] = useState(false);
+  const [isCurrentHourActive, setIsCurrentHourActive] = useState(false);
+
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    const checkCurrentHour = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const [slotHourStr] = slot.isoTime.split(':');
+      const slotHour = parseInt(slotHourStr);
+      // Highlight if current hour matches slot hour and it's the same day
+      setIsCurrentHourActive(currentHour === slotHour && now.toDateString() === new Date(now.getFullYear(), now.getMonth(), now.getDate()).toDateString());
+    };
+
+    checkCurrentHour(); // Initial check
+    const intervalId = setInterval(checkCurrentHour, 60000); // Update every minute
+
+    return () => clearInterval(intervalId);
+  }, [isClient, slot.isoTime]);
+
 
   let isSlotPast = false;
   if (isClient) {
@@ -289,9 +310,9 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
   };
 
   return (
-    <div className="p-3 border rounded-lg bg-card/60 hover:shadow-sm transition-shadow"> 
+    <div className={`p-3 border rounded-lg bg-card/60 hover:shadow-sm transition-all duration-300 ${isCurrentHourActive ? 'bg-primary/10 border-primary shadow-md ring-2 ring-primary/50' : 'border-border'}`}> 
       <div className="flex justify-between items-center mb-1.5"> 
-        <h4 className="font-semibold text-primary text-base">{slot.label}</h4> 
+        <h4 className={`font-semibold text-base ${isCurrentHourActive ? 'text-primary' : 'text-foreground'}`}>{slot.label}</h4> 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="sm" className="text-sm"> 
@@ -360,4 +381,3 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
   );
 }
     
-
