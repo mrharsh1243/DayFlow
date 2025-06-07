@@ -282,8 +282,7 @@ export function TimeBlockingCard() {
   
       if (newActiveIndex !== -1) {
         if (newActiveIndex !== activeSlotIndexRef.current) {
-          // Scroll only if the active slot changed or it's the initial valid scroll
-          const behavior = activeSlotIndexRef.current === null ? 'auto' : 'smooth';
+          const behavior = activeSlotIndexRef.current === null ? 'smooth' : 'smooth'; // Use smooth for initial as well
           slotRefs.current[newActiveIndex]?.scrollIntoView({
             behavior: behavior,
             block: 'center',
