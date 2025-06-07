@@ -6,14 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CalendarDays, ListTodo, MessageSquareQuote, PlusCircle, Trash2, Zap, Briefcase, User, HeartPulse, ShoppingCart, AlertTriangle } from "lucide-react";
-import type { Priority, Task, TaskCategoryName } from '@/types/dayflow'; 
+import { Textarea } from "@/components/ui/textarea";
+import { CalendarDays, ListTodo, MessageSquareQuote, PlusCircle, Trash2, Zap, Briefcase, User, HeartPulse, ShoppingCart, AlertTriangle, Edit3, Lock, Unlock, Save as SaveIcon, XSquare } from "lucide-react";
+import type { Priority, Task, TaskCategoryName } from '@/types/dayflow';
 import { TODO_CATEGORY_NAMES } from '@/types/dayflow';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { getDailyQuote } from '@/ai/flows/get-daily-quote-flow';
 import { useToast } from '@/hooks/use-toast';
-import { format, subDays, isEqual, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 
 const DEFAULT_PRIORITY_PLACEHOLDER_ID = 'prio-default';
 const DEFAULT_PRIORITY_PLACEHOLDER: Priority = { id: DEFAULT_PRIORITY_PLACEHOLDER_ID, text: 'Define top goal for the day', completed: false };
@@ -30,8 +31,13 @@ export function DailyOverviewCard() {
   const [currentDay, setCurrentDay] = useState('');
   const [priorities, setPriorities] = useState<Priority[]>([]);
   const [newPriority, setNewPriority] = useState('');
-  const [quote, setQuote] = useState<string | null>(null);
-  const [isQuoteLoading, setIsQuoteLoading] = useState(true);
+  
+  const [displayedQuote, setDisplayedQuote] = useState<string>("Loading your daily inspiration...");
+  const [isAiQuoteLoading, setIsAiQuoteLoading] = useState(true);
+  const [isUserQuoteLocked, setIsUserQuoteLocked] = useState(false);
+  const [isEditingUserQuote, setIsEditingUserQuote] = useState(false);
+  const [editableQuoteText, setEditableQuoteText] = useState('');
+
   const [isInitialPriorityLoad, setIsInitialPriorityLoad] = useState(true);
   const { toast } = useToast();
 
@@ -58,11 +64,9 @@ export function DailyOverviewCard() {
       try {
         const storedPriorities: Priority[] = JSON.parse(storedPrioritiesStr);
         if (lastSavedDate && lastSavedDate !== todayStr) {
-          // It's a new day, check for incomplete priorities from yesterday
           yesterdaysIncomplete = storedPriorities.filter(p => !p.completed && p.id !== DEFAULT_PRIORITY_PLACEHOLDER_ID);
-          currentDayPriorities = [DEFAULT_PRIORITY_PLACEHOLDER]; // Start fresh for today
+          currentDayPriorities = [DEFAULT_PRIORITY_PLACEHOLDER];
         } else {
-          // Same day or no date stored, use stored priorities
           currentDayPriorities = Array.isArray(storedPriorities) && storedPriorities.length > 0 ? storedPriorities : [DEFAULT_PRIORITY_PLACEHOLDER];
         }
       } catch (e) {
@@ -79,7 +83,7 @@ export function DailyOverviewCard() {
 
     if (lastSavedDate !== todayStr || !storedPrioritiesStr) {
       localStorage.setItem('dayflow-priorities-date', todayStr);
-      if (currentDayPriorities.length > 0 || yesterdaysIncomplete.length === 0) { // Save if we have priorities or reset for new day
+      if (currentDayPriorities.length > 0 || yesterdaysIncomplete.length === 0) { 
          localStorage.setItem('dayflow-priorities', JSON.stringify(currentDayPriorities));
       }
     }
@@ -105,49 +109,104 @@ export function DailyOverviewCard() {
     if (!isInitialPriorityLoad) {
       localStorage.setItem('dayflow-priorities', JSON.stringify(priorities));
       localStorage.setItem('dayflow-priorities-date', format(new Date(), 'yyyy-MM-dd'));
-      // Dispatch event so other components know data changed, but distinguish source
       window.dispatchEvent(new CustomEvent('dayflow-datachanged', { detail: { source: 'DailyOverviewCardItself' } }));
     }
   }, [priorities, isInitialPriorityLoad]);
 
+  const loadQuoteData = useCallback(async (mountedChecker: () => boolean) => {
+    const lockedStatus = localStorage.getItem('dayflow-user-quote-locked-status') === 'true';
+    const userLockedQuoteText = localStorage.getItem('dayflow-user-locked-quote');
+
+    if (mountedChecker()) {
+      setIsUserQuoteLocked(lockedStatus);
+    }
+
+    if (lockedStatus && userLockedQuoteText) {
+      if (mountedChecker()) {
+        setDisplayedQuote(userLockedQuoteText);
+        setIsAiQuoteLoading(false);
+      }
+      return; 
+    }
+
+    if (mountedChecker()) setIsAiQuoteLoading(true);
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const lsAiQuote = localStorage.getItem('dayflow-ai-daily-quote');
+    const lsAiQuoteDate = localStorage.getItem('dayflow-ai-daily-quote-date');
+
+    if (lsAiQuote && lsAiQuoteDate === todayStr) {
+      if (mountedChecker()) {
+        setDisplayedQuote(lsAiQuote);
+        setIsAiQuoteLoading(false);
+      }
+    } else {
+      try {
+        const result = await getDailyQuote();
+        if (mountedChecker()) {
+          setDisplayedQuote(result.quote);
+          localStorage.setItem('dayflow-ai-daily-quote', result.quote);
+          localStorage.setItem('dayflow-ai-daily-quote-date', todayStr);
+        }
+      } catch (error) {
+        console.error("Error fetching daily quote:", error);
+        const fallbackOnError = "The best way to predict the future is to create it.";
+        if (mountedChecker()) {
+          setDisplayedQuote(fallbackOnError);
+          localStorage.setItem('dayflow-ai-daily-quote', fallbackOnError);
+          localStorage.setItem('dayflow-ai-daily-quote-date', todayStr);
+          toast({ title: "AI Quote Error", description: "Could not fetch a new quote. Showing a default one.", variant: "destructive" });
+        }
+      } finally {
+        if (mountedChecker()) setIsAiQuoteLoading(false);
+      }
+    }
+  }, [toast]);
+
   useEffect(() => {
     let isMounted = true;
-    const fetchOrLoadQuote = async () => {
-      const todayStr = format(new Date(), 'yyyy-MM-dd');
-      const lsQuote = localStorage.getItem('dayflow-dailyQuote');
-      const lsQuoteDate = localStorage.getItem('dayflow-dailyQuoteDate');
-
-      if (lsQuote && lsQuoteDate === todayStr) {
-        if (isMounted) {
-          setQuote(lsQuote);
-          setIsQuoteLoading(false);
-        }
-      } else {
-        if (isMounted) setIsQuoteLoading(true);
-        try {
-          const result = await getDailyQuote();
-          if (isMounted) {
-            setQuote(result.quote);
-            localStorage.setItem('dayflow-dailyQuote', result.quote);
-            localStorage.setItem('dayflow-dailyQuoteDate', todayStr);
-          }
-        } catch (error) {
-          console.error("Error fetching daily quote:", error);
-          if (isMounted) {
-            const fallbackOnError = "The best way to predict the future is to create it.";
-            setQuote(fallbackOnError); // Use fallback
-            localStorage.setItem('dayflow-dailyQuote', fallbackOnError);
-            localStorage.setItem('dayflow-dailyQuoteDate', todayStr);
-            toast({ title: "AI Quote Error", description: "Could not fetch a new quote. Showing a default one.", variant: "destructive" });
-          }
-        } finally {
-          if (isMounted) setIsQuoteLoading(false);
-        }
-      }
-    };
-    fetchOrLoadQuote();
+    const checker = () => isMounted;
+    loadQuoteData(checker);
     return () => { isMounted = false; };
-  }, [toast]);
+  }, [loadQuoteData]);
+
+
+  const handleEditQuote = () => {
+    setEditableQuoteText(displayedQuote);
+    setIsEditingUserQuote(true);
+  };
+
+  const handleCancelEditQuote = () => {
+    setIsEditingUserQuote(false);
+  };
+
+  const handleSaveEditedQuote = () => {
+    setDisplayedQuote(editableQuoteText);
+    if (isUserQuoteLocked) {
+      localStorage.setItem('dayflow-user-locked-quote', editableQuoteText);
+      toast({ title: "Locked Quote Updated" });
+    }
+    setIsEditingUserQuote(false);
+  };
+
+  const handleToggleLockQuote = () => {
+    let isMounted = true;
+    const checker = () => isMounted;
+
+    if (isUserQuoteLocked) { // Unlock
+      setIsUserQuoteLocked(false);
+      localStorage.setItem('dayflow-user-quote-locked-status', 'false');
+      localStorage.removeItem('dayflow-user-locked-quote');
+      toast({ title: "Quote Unlocked", description: "Daily AI quotes will now resume." });
+      loadQuoteData(checker); // Fetch AI quote for today
+    } else { // Lock
+      setIsUserQuoteLocked(true);
+      localStorage.setItem('dayflow-user-quote-locked-status', 'true');
+      localStorage.setItem('dayflow-user-locked-quote', displayedQuote);
+      toast({ title: "Quote Locked", description: "This quote will be shown daily until unlocked." });
+    }
+    return () => { isMounted = false; };
+  };
+
 
   const addPriorityToList = (priorityText: string) => {
     setPriorities(prevPriorities => {
@@ -174,7 +233,6 @@ export function DailyOverviewCard() {
       setYesterdaysPrioritiesToCarryOver(prev => prev.filter(p => p.id !== priority.id));
       toast({ title: "Priority Carried Over", description: `"${priority.text}" added to today's priorities.`});
     } else {
-      // Priorities are full, open dialog to move to To-Do
       setPriorityToMove(priority);
       setIsMoveToToDoDialogOpen(true);
     }
@@ -321,13 +379,42 @@ export function DailyOverviewCard() {
                 )}
               </div>
               <div>
-                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                  {isQuoteLoading ? <Zap className="text-accent animate-pulse" /> : <MessageSquareQuote className="text-accent" />}
-                  Motivation
-                </h3>
-                <p className="text-sm italic text-muted-foreground p-3 bg-secondary/30 rounded-md min-h-[40px]">
-                  {isQuoteLoading ? "Fetching inspiring words..." : quote || "Embrace the journey, one step at a time."}
-                </p>
+                <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                    {isAiQuoteLoading && !isUserQuoteLocked ? <Zap className="text-accent animate-pulse" /> : <MessageSquareQuote className="text-accent" />}
+                    Motivation
+                    </h3>
+                    <div className="flex items-center gap-1">
+                    {!isEditingUserQuote && (
+                        <Button variant="ghost" size="icon" onClick={handleEditQuote} className="h-7 w-7" title="Edit quote">
+                            <Edit3 className="h-4 w-4" />
+                        </Button>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={handleToggleLockQuote} className="h-7 w-7" title={isUserQuoteLocked ? "Unlock quote" : "Lock quote"}>
+                        {isUserQuoteLocked ? <Lock className="h-4 w-4 text-primary" /> : <Unlock className="h-4 w-4" />}
+                    </Button>
+                    </div>
+                </div>
+
+                {isEditingUserQuote ? (
+                  <div className="space-y-2">
+                    <Textarea
+                      value={editableQuoteText}
+                      onChange={(e) => setEditableQuoteText(e.target.value)}
+                      placeholder="Enter your motivational quote..."
+                      rows={3}
+                      className="text-sm"
+                    />
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="outline" size="sm" onClick={handleCancelEditQuote}><XSquare className="mr-1 h-4 w-4" />Cancel</Button>
+                      <Button size="sm" onClick={handleSaveEditedQuote}><SaveIcon className="mr-1 h-4 w-4" />Save</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm italic text-muted-foreground p-3 bg-secondary/30 rounded-md min-h-[60px] whitespace-pre-wrap">
+                    {isAiQuoteLoading && !isUserQuoteLocked && !displayedQuote.startsWith("Loading") ? "Fetching inspiring words..." : displayedQuote}
+                  </p>
+                )}
               </div>
             </CardContent>
           </AccordionContent>
@@ -363,3 +450,6 @@ export function DailyOverviewCard() {
     </Card>
   );
 }
+
+
+    
