@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Clock, PlusCircle, Trash2, Lock, Edit3, AlertTriangle } from "lucide-react"; // Added AlertTriangle
+import { Clock, PlusCircle, Trash2, Lock, Edit3, AlertTriangle } from "lucide-react";
 import type { Task, TimeSlot as TimeSlotType } from '@/types/dayflow'; 
 import { TIME_SLOTS } from '@/types/dayflow';
 import { useToast } from "@/hooks/use-toast";
@@ -33,7 +33,10 @@ export function TimeBlockingCard() {
   const [editingTask, setEditingTask] = useState<ScheduledTask | null>(null);
   const [editingText, setEditingText] = useState('');
   const { toast } = useToast();
-  const [refreshKey, setRefreshKey] = useState(0); // Used to trigger re-renders on data change
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const [playedStartSounds, setPlayedStartSounds] = useState<Record<string, boolean>>({});
+  const [playedWarningSounds, setPlayedWarningSounds] = useState<Record<string, boolean>>({});
 
   const loadTasks = useCallback(() => {
     const storedTasks = localStorage.getItem('dayflow-timeblock-tasks');
@@ -53,29 +56,75 @@ export function TimeBlockingCard() {
     loadTasks();
 
     const handleDataChange = () => {
-      // Increment refreshKey to force a re-render and data reload
       setRefreshKey(prev => prev + 1);
     };
     window.addEventListener('dayflow-datachanged', handleDataChange);
     return () => {
       window.removeEventListener('dayflow-datachanged', handleDataChange);
     };
-  }, [loadTasks]); // loadTasks is stable due to useCallback
+  }, [loadTasks]); 
 
   useEffect(() => {
-    // This effect runs when refreshKey changes, ensuring tasks are reloaded
-    if (refreshKey > 0) { // Avoid reloading on initial mount if loadTasks already ran
+    if (refreshKey > 0) { 
         loadTasks();
     }
   }, [refreshKey, loadTasks]); 
 
   useEffect(() => {
-    // Save tasks to localStorage only if tasks have been initialized and changed
-    // refreshKey check prevents writing empty tasks on initial load if localStorage was empty.
     if (Object.keys(tasks).length > 0 || refreshKey > 0) { 
         localStorage.setItem('dayflow-timeblock-tasks', JSON.stringify(tasks));
     }
   }, [tasks, refreshKey]);
+
+  // Effect to initialize/reset sound played states on mount (simplistic daily reset)
+  useEffect(() => {
+    setPlayedStartSounds({});
+    setPlayedWarningSounds({});
+  }, []);
+
+  // Effect for playing sounds based on time
+  useEffect(() => {
+    const playSound = (soundPath: string) => {
+      new Audio(soundPath).play().catch(e => console.error(`Error playing sound ${soundPath}:`, e));
+    };
+
+    const intervalId = setInterval(() => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+
+      TIME_SLOTS.forEach(slot => {
+        const [slotHourStr] = slot.isoTime.split(':');
+        const slotHour = parseInt(slotHourStr);
+
+        const tasksInSlot = tasks[slot.id] || [];
+        if (tasksInSlot.length === 0) {
+          return; 
+        }
+
+        // Start Sound Logic: at HH:00
+        if (currentHour === slotHour && currentMinute === 0) {
+          if (!playedStartSounds[slot.id]) {
+            console.log(`Playing start sound for ${slot.label} at ${currentHour}:${currentMinute}`);
+            playSound('/slot-start-sound.mp3');
+            setPlayedStartSounds(prev => ({ ...prev, [slot.id]: true }));
+          }
+        }
+
+        // 5-Minute Warning Sound Logic: at HH:55
+        if (currentHour === slotHour && currentMinute === 55) {
+           if (!playedWarningSounds[slot.id]) {
+            console.log(`Playing 5-min warning for ${slot.label} at ${currentHour}:${currentMinute}`);
+            playSound('/slot-5min-warning.mp3');
+            setPlayedWarningSounds(prev => ({ ...prev, [slot.id]: true }));
+          }
+        }
+      });
+    }, 60000); // Check every minute
+
+    return () => clearInterval(intervalId);
+  }, [tasks, playedStartSounds, playedWarningSounds]);
+
 
   const addTaskToSlot = useCallback((timeSlotId: string, taskText: string, isLocked: boolean = false) => {
     if (!taskText.trim()) return;
@@ -224,10 +273,9 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
   let isSlotPast = false;
   if (isClient) {
     const now = new Date();
-    const currentDay = now.toDateString();
     const [slotHourStr, slotMinuteStr] = slot.isoTime.split(':');
     const slotDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(slotHourStr), parseInt(slotMinuteStr));
-    isSlotPast = slotDateTime < now && slotDateTime.toDateString() === currentDay;
+    isSlotPast = slotDateTime < now && slotDateTime.toDateString() === now.toDateString();
   }
 
 
@@ -284,7 +332,7 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
       {tasks.length > 0 ? (
         <ul className="space-y-1.5 text-sm"> 
           {tasks.map(task => {
-            const isOverdue = isClient && isSlotPast && !task.completed && !task.isLocked;
+            const isOverdue = isClient && isSlotPast && !task.completed && !task.isLocked && parseInt(slot.isoTime.split(':')[0]) < new Date().getHours();
             return (
               <li key={task.id} className={`flex items-center gap-2 p-1.5 rounded ${task.isLocked ? 'bg-primary/10' : 'bg-muted/40'} ${isOverdue ? 'opacity-75' : ''}`}> 
                 <Checkbox id={`task-${slot.id}-${task.id}`} checked={task.completed} onCheckedChange={() => onToggleTask(task.id)} disabled={task.isLocked} aria-label={`Mark task ${task.text} as ${task.completed ? 'incomplete' : 'complete'}`}/>
@@ -312,3 +360,4 @@ function TimeSlot({ slot, tasks, onAddTask, onRemoveTask, onToggleTask, onEditTa
   );
 }
     
+
