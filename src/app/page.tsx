@@ -37,12 +37,9 @@ function SortableItem({ id, children }: { id: string; children: React.ReactNode 
 
   const style: React.CSSProperties = {
     transition,
+    transform: CSS.Transform.toString(transform),
     zIndex: isDragging ? 10 : undefined,
-    // Add a shadow and a slight scale when dragging for better visual feedback.
     boxShadow: isDragging ? '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)' : undefined,
-    transform: isDragging 
-      ? `${CSS.Transform.toString(transform)} scale(1.02)` 
-      : CSS.Transform.toString(transform),
   };
 
   return (
