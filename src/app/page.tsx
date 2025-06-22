@@ -1,4 +1,7 @@
 
+"use client";
+
+import { useEffect } from 'react';
 import { Header } from "@/components/dayflow/Header";
 import { DailyOverviewCard } from "@/components/dayflow/DailyOverviewCard";
 import { TimeBlockingCard } from "@/components/dayflow/TimeBlockingCard";
@@ -11,6 +14,36 @@ import { AiFeaturesCard } from "@/components/dayflow/AiFeaturesCard";
 import { PomodoroTimerCard } from "@/components/dayflow/PomodoroTimerCard";
 
 export default function DayFlowPage() {
+  useEffect(() => {
+    const LAST_ACTIVE_DATE_KEY = 'dayflow-last-active-date';
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const lastActiveDate = localStorage.getItem(LAST_ACTIVE_DATE_KEY);
+        const today = new Date().toDateString();
+
+        if (lastActiveDate && lastActiveDate !== today) {
+          // It's a new day, refresh the page to reload all data
+          window.location.reload();
+        }
+        
+        // Always update the last active date when the app becomes visible
+        localStorage.setItem(LAST_ACTIVE_DATE_KEY, today);
+      }
+    };
+    
+    // Set the initial date when the component mounts
+    localStorage.setItem(LAST_ACTIVE_DATE_KEY, new Date().toDateString());
+
+    // Listen for visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []); // Empty dependency array ensures this runs only once on mount
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
