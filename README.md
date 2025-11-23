@@ -30,6 +30,7 @@ DayFlow is a Next.js application designed to help you plan your day effectively 
 *   **ShadCN UI**: Re-usable UI components.
 *   **Genkit (with Google AI - Gemini)**: For AI-powered features.
 *   **Lucide React**: For icons.
+*   **Docker**: For containerizing the application.
 
 ## Prerequisites
 
@@ -37,6 +38,7 @@ Before you begin, ensure you have the following installed:
 
 *   [Node.js](https://nodejs.org/) (version 18.x or later recommended)
 *   [npm](https://www.npmjs.com/) (comes with Node.js) or [Yarn](https://yarnpkg.com/) or [pnpm](https://pnpm.io/)
+*   [Docker](https://www.docker.com/get-started) (if you plan to use the containerized version)
 
 ## Getting Started
 
@@ -107,6 +109,31 @@ Open two terminal windows/tabs in your project directory.
 Open your web browser and navigate to `http://localhost:9002` (or the port indicated in your terminal if different).
 
 You should now be able to use the DayFlow application, including its AI-powered features.
+
+## Docker Support
+
+You can also build and run this application using Docker.
+
+**1. Build the Docker Image**
+
+From the root directory of the project, run the following command to build the Docker image:
+
+```bash
+docker build -t dayflow .
+```
+
+**2. Run the Docker Container**
+
+After the image is built, you can run it as a container. This command runs the container, maps the necessary port, and passes in your environment variables from your `.env` file.
+
+```bash
+# The Docker container exposes the Next.js app on port 9002.
+# Note: The Genkit AI server does not run within this Docker container. 
+# This container is for the production Next.js build.
+docker run -p 9002:9002 --env-file .env dayflow
+```
+
+Now, you can access the application in your browser at `http://localhost:9002`.
 
 ## Local Storage
 
